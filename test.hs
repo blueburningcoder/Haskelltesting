@@ -51,9 +51,6 @@ third :: (a, b, c) -> c
 third (_, _, c) = c
 
 
-head' :: [a] -> a
-head' [] = error "Empty list ..."
-head' (x:_) = x
 
 length' :: (Num b) => [a] -> b
 length' [] = 0
@@ -63,7 +60,7 @@ length' (_:xs) = 1 + length' xs  -- NO square brackets, only the round ones (Nec
 bmiTell :: (RealFloat a) => a -> a -> String
 bmiTell weight height                             -- NO = at the end of this line!!!
     | bmi <= skinny = "You're underweight, you emo, you!"
-    | bmi <= normal = "You're supposedly normal. Pffft, I bet you're uly!"
+    | bmi <= normal = "You're supposedly normal. Pffft, I bet you're ugly!"
     | bmi <=  fat   = "You're fat! Lose some weight, fatty!"
     | otherwise     = "You're a whale, congratulations!"
     where bmi = weight / height ^ 2
@@ -85,18 +82,30 @@ head' :: [a] -> a
 head' [] = error "No head for empty lists!"
 head' (x:_) = x
 -- equals:
-head' xs = case of [] -> error "No head for empty lists!"
-                   (x:_) -> x
+-- head' xs = case xs of [] -> error "No head for empty lists!"
+--                      (x:_) -> x
+
+
+describeList :: [a] -> String
+describeList xs = "The list is " ++ what xs
+    where what [] = "empty"
+          what [x] = "a singleton list"
+          what xs = "a longer list"
+
+
+quicksort :: (Ord a) => [a] -> [a]
+quicksort [] = []
+quicksort (x:xs) = 
+    let smallerSorted = quicksort [a | a <- xs, a <= x]
+        biggerSorted = quicksort [a | a <- xs, a > x]
+    in smallerSorted ++ [x] ++ biggerSorted
 
 
 
-
-
-
-
-
-
-
+zipWith' :: (a -> b -> c) -> [a] -> [b] -> [c]
+zipWith' _ [] _ = []
+zipWith' _ _ [] = []
+zipWith' f (x:xs) (y:ys) = f x y : zipWith' f xs ys
 
 
 
