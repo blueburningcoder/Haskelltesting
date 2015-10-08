@@ -41,6 +41,25 @@ charname 'b' = "Broseph"
 charname 'c' = "Cecil"
 charname c = "Oh. I don't know someone like that."
 
+maximum' :: (Ord a) => [a] -> a
+maximum' [] = error "Empty list!"
+maximum' [x] = x
+maximum' (x:xs)
+    | x > maxTail = x
+    | otherwise = maxTail
+    where maxTail = maximum' xs
+
+
+
+flip' :: (a -> b -> c) -> (b -> a -> c)
+flip' f = g
+    where g x y = f y x
+
+chain :: (Integral a) => a -> [a]
+chain 1 = [1]
+chain n 
+    | even n = n:chain (div n 2)
+    | odd n = n:chain (n*3 + 1)
 
 
 addVectors :: (Num a) => (a, a) -> (a, a) -> (a, a)
@@ -172,34 +191,11 @@ baseRect :: Float -> Float -> Shape
 baseRect w h = Rectangle (Point 0 0) (Point w h)
 
 
+infixr :-: 5
 
 data List a = Empty | a :-: (List a) deriving (Show, Read, Eq, Ord)
 
 
-
-
-
-
-
-maximum' :: (Ord a) => [a] -> a
-maximum' [] = error "Empty list!"
-maximum' [x] = x
-maximum' (x:xs)
-    | x > maxTail = x
-    | otherwise = maxTail
-    where maxTail = maximum' xs
-
-
-
-flip' :: (a -> b -> c) -> (b -> a -> c)
-flip' f = g
-    where g x y = f y x
-
-chain :: (Integral a) => a -> [a]
-chain 1 = [1]
-chain n 
-    | even n = n:chain (div n 2)
-    | odd n = n:chain (n*3 + 1)
 
 
 
