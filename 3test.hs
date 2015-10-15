@@ -12,3 +12,23 @@ data Barry t k p = Barry { yabba :: p, dabba :: t k }
 
 instance Functor (Barry a b) where
     fmap f (Barry { yabba = x, dabba = y}) = Barry { yabba = f x, dabba = y}
+
+
+main = do 
+    line <- getLine 
+    if null line
+        then return ()
+        else do
+            putStrLn $ reverseWords line
+            main
+
+reverseWords :: String -> String
+reverseWords = unwords . map reverse . words
+
+
+
+
+bar = 
+    let a = 1; b = 2; c = 3
+    in a + b + c 
+-- weird indentation ... 
