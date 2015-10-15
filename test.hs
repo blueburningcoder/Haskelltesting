@@ -191,7 +191,7 @@ baseRect :: Float -> Float -> Shape
 baseRect w h = Rectangle (Point 0 0) (Point w h)
 
 
-infixr :-: 5
+infixr 5 :-: 
 
 data List a = Empty | a :-: (List a) deriving (Show, Read, Eq, Ord)
 
