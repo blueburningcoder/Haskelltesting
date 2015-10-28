@@ -32,3 +32,16 @@ bar =
     let a = 1; b = 2; c = 3
     in a + b + c 
 -- weird indentation ... 
+--
+
+import 
+
+-- RPN = Reverse Polish Notation
+solveRPN :: Num a => String -> a
+solveRPN expression = head . foldl foldingFunction [] . words
+    where foldingFunction (x:y:ys) "*" = (x * y):ys
+
+
+
+
+

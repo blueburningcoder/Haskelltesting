@@ -6,6 +6,11 @@ import qualified Data.Set as Set
 doubleMe :: Int -> Int
 doubleMe x = x + x
 
+
+foo :: Int
+foo = doubleMe 2
+
+
 doubleUs :: Int -> Int -> Int
 doubleUs x y = doubleMe x + doubleMe y
 
