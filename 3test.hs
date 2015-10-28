@@ -31,15 +31,23 @@ reverseWords = unwords . map reverse . words
 bar = 
     let a = 1; b = 2; c = 3
     in a + b + c 
--- weird indentation ... 
+-- weird intendation ... 
 --
 
-import 
 
 -- RPN = Reverse Polish Notation
-solveRPN :: Num a => String -> a
-solveRPN expression = head . foldl foldingFunction [] . words
-    where foldingFunction (x:y:ys) "*" = (x * y):ys
+-- solveRPN :: Num a => String -> a
+-- solveRPN expression = head . foldl foldingFunction [] . words
+--     where foldingFunction (x:y:ys) "*" = (x * y):ys
+
+
+-- infixl 4 <*>
+-- (<*>) :: Applicative a => a (b -> c) -> a b -> a c
+-- a f <*> x = fmap f x
+
+-- infixl 4 <$>
+-- (<$>) :: Functor f => (a -> b) -> f a -> f b
+-- f <$> x = fmap f x
 
 
 
