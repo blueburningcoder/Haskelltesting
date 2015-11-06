@@ -1,5 +1,6 @@
 import Control.Monad
 import Control.Applicative
+import Data.Monoid
 -- (Not needed for most of the code ...)
 
 
@@ -183,6 +184,22 @@ newtype Pair b a = Pair { getPair :: (a,b) }
 instance Functor (Pair c) where
     fmap f (Pair (x,y)) = Pair (f x, y)
 
+-- different behaviour with helloMe when giving it 'undefined' for data / newtype
+newtype CoolBool = CoolBool { getCoolBool :: Bool }
+
+helloMe :: CoolBool -> String
+helloMe (CoolBool _) = "hello"
+
+
+
+{- 
+newtype Product a = Product { getProduct :: a }
+    deriving (Eq, Ord, Read, Show, Bounded)
+
+instance Num a => Monoid (Product a) where
+    mempty = Product 1
+    Product x `mappend` Product y = Product (x * y)
+-}
 
 
 
