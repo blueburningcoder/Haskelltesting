@@ -31,7 +31,7 @@ reverseWords = unwords . map reverse . words
 bar = 
     let a = 1; b = 2; c = 3
     in a + b + c 
--- weird intendation ... 
+-- weird indendation ... 
 --
 
 

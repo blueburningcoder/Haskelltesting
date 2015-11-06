@@ -1,4 +1,5 @@
 import Control.Monad
+import Control.Applicative
 -- (Not needed for most of the code ...)
 
 
@@ -163,6 +164,25 @@ cutOff n (Fork v l r)
 infiniteTree :: [a] -> Tree2 a
 infiniteTree [] = Nil
 infiniteTree (x:xs) = Fork x (infiniteTree xs) Nil
+
+
+
+-- learnyouahaskell :)
+
+sequenceA :: Applicative f => [f a] -> f [a]
+sequenceA [] = pure []
+sequenceA (x:xs) = (:) <$> x <*> sequenceA xs
+
+sequenceB :: Applicative f => [f a] -> f [a]
+sequenceB = foldr (liftA2 (:)) (pure [])
+
+
+
+newtype Pair b a = Pair { getPair :: (a,b) }
+
+instance Functor (Pair c) where
+    fmap f (Pair (x,y)) = Pair (f x, y)
+
 
 
 
