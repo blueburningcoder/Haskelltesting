@@ -53,11 +53,20 @@ main = do
 
 -- or, rewritten a bit with the Control.Monad:
 
-main = do
-    c <- getChar
+main = do                   --     .  .   
+    show' $ collTestFor' (maxBound :: Int)
+{-    c <- getChar
     when (c /= ' ') $ do 
         putChar c
         main
+-}
+
+
+show' :: [(Int, Bool)] -> IO ()
+show' [] = putStrLn "\n\nEnde :)"
+show' ((i, b):xs) = do
+    putStrLn $ (show b) ++ " for " ++ (show i)
+    show' xs
 
 
 
@@ -77,6 +86,8 @@ collTest n = collTest . collNext $ n
 collTestFor :: Int -> [Bool]
 collTestFor n = map collTest (take n [1..])
 
+collTestFor' :: Int -> [(Int, Bool)]
+collTestFor' n = map (\x -> (x, collTest x)) (take n [1..])
 
 
 
@@ -192,14 +203,33 @@ helloMe (CoolBool _) = "hello"
 
 
 
-{- 
-newtype Product a = Product { getProduct :: a }
+ -- might be how Product and Num are implemented :) 
+newtype Product' a = Product' { getProduct' :: a }
     deriving (Eq, Ord, Read, Show, Bounded)
 
-instance Num a => Monoid (Product a) where
-    mempty = Product 1
-    Product x `mappend` Product y = Product (x * y)
--}
+instance Num a => Monoid (Product' a) where
+    mempty = Product' 1
+    Product' x `mappend` Product' y = Product' (x * y)
+
+
+
+newtype Any' = Any' { getAny' :: Bool }
+    deriving (Eq, Ord, Read, Show, Bounded)
+
+instance Monoid Any' where 
+        mempty = Any' False
+        Any' x `mappend` Any' y = Any' (x || y)
+
+
+
+newtype All' = All' { getAll' :: Bool }
+    deriving (Eq, Ord, Read, Show)
+
+instance Monoid All' where
+        mempty = All' True
+        All' x `mappend` All' y = All' (x && y)
+
+
 
 
 
