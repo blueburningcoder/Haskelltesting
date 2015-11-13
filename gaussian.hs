@@ -2,7 +2,7 @@ module GaussianSolver where
 
 
 type Vector = [Double]
-type Matrice = [Vector]-- with N x N values
+type Matrice = [Vector] -- with N x N values
 
 
 -- | returns the size of a Matrice
@@ -90,7 +90,6 @@ matMultVec' mat (v:vec) n = -- init n with 0
             nextMat = matMultVec' newMat vec ((n + 1) `mod` length' mat)
         in if nextMat == [] then newMat else nextMat
 
-
 -- | getting only one column from the matrice
 colToVec :: Matrice -> Int -> Vector
 colToVec [] _ = []
@@ -132,7 +131,6 @@ matOp (m:mat) f = (vecOp m f):(matOp mat f)
 colOp :: Matrice -> Int -> (Double -> Double) -> Matrice
 colOp [] _ _ = []
 colOp m y f = insMat m (vecOp (colToVec m y) f) y
-
 
 
 
