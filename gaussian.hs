@@ -21,13 +21,14 @@ gaussian m v
 
 
 -- | returns a Vector with factors needed for zeroing p ones below the diagonal
-zeroBelowDiagonal :: Matrice -> Int -> Vector
-zeroBelowDiagonal = actual (-1)
-    where actual p mat c
+zeroBelowDiagonal :: Matrice -> Int -> Matrice -- anything above one as p makes sense
+zeroBelowDiagonal m p = actual (-1)
+    where actual c mat p -- actual :: Int -> Matrice -> Int -> [Double]
             | c == length' mat = [] -- p says how many below the diagonal
             | otherwise = do
             let n = (c + 1) `mod` length' mat
-            (calcZeroFactor (mat !! n) n):(actual p mat n)
+                a = (p + n) `mod` length' mat
+            (calcZeroFactor (mat !! n) a):(actual n mat p)
 
 -- | returns the Vector one needs to multiply with the Matrice in order to get the diagonal to one's only
 oneTheDiagonal :: Matrice -> Vector
@@ -84,7 +85,7 @@ matMultVec (m:mat) (v:vec) = (vecMult m v):(matMultVec mat vec)
 matMultVec' :: Matrice -> Vector -> Int -> Matrice
 matMultVec' [] _ _ = []
 matMultVec' _ [] _ = []
-matMultVec' mat (v:vec) n = 
+matMultVec' mat (v:vec) n = -- init n with 0
         let newMat = insMat mat (vecMult (colToVec mat n) v) n; 
             nextMat = matMultVec' newMat vec ((n + 1) `mod` length' mat)
         in if nextMat == [] then newMat else nextMat

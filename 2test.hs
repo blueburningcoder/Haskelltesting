@@ -232,6 +232,3 @@ instance Monoid All' where
 
 
 
-
-
-
