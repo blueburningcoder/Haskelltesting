@@ -4,18 +4,19 @@ module GaussianSolver where
 type Vector = [Double]
 type Matrice = [Vector] -- with N x N values
 
-
+{-
 -- | returns the size of a Matrice
 length' :: Matrice -> Int
 length' [] = 0
 length' ([]:xss) = 1 + length xss
-length' ((x:xs):xss) = 1 + length xss
-
+length' ((x:xs):xss) = 1 + length' xss
+apparently not needed, for some reason the normal length one works now
+-}
 
 -- | does a gaussian solver, and if it is solvable, returns the Vector with the result
 gaussian :: Matrice -> Vector -> Maybe Vector
 gaussian m v 
-    | length' m /= length (m !! 0) = Nothing
+    | length m /= length (m !! 0) = Nothing
     | length v /= length (m !! 0) = Nothing
     | otherwise = undefined 
 
@@ -126,6 +127,18 @@ vecOp (x:xs) f = (f x):(vecOp xs f)
 matOp :: Matrice -> (Double -> Double) -> Matrice
 matOp [] _ = []
 matOp (m:mat) f = (vecOp m f):(matOp mat f)
+
+-- | does an operation with each of the two values
+matOpMat :: Matrice -> Matrice -> (Double -> Double -> Double) -> Matrice
+matOpMat [] _ _ = []
+matOpMat _ [] _ = []
+matOpMat (m:mat) (x:xs) f = (vecOpVec m x f):(matOpMat mat xs f)
+
+-- | operates two vectors together however needed
+vecOpVec :: Vector -> Vector -> (Double -> Double -> Double) -> Vector
+vecOpVec [] _ _ = []
+vecOpVec _ [] _ = []
+vecOpVec (v:vec) (x:xs) f = (f v x):(vecOpVec vec xs f)
 
 -- | does an operation on one column only 
 colOp :: Matrice -> Int -> (Double -> Double) -> Matrice
