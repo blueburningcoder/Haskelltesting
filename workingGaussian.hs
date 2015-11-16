@@ -42,8 +42,8 @@ zeroThisValue a@(GMatrice (b@(Line vec d):(c@(Line veC dd)):l)) x 0 =
             newLine = lineSub (lineOp c (*factor)) b
         in insGMat a newLine 0
 zeroThisValue (GMatrice (l:li)) x y = 
-        let (GMatrice (bi:bii:biii:biv:[])) = zeroThisValue (GMatrice (li ++ [l])) x (y-1)
-        in GMatrice (biv:bi:bii:biii:[])
+        let (GMatrice list) = zeroThisValue (GMatrice (li ++ [l])) x (y-1)
+        in GMatrice [last list] ++ (init list)
 
 lineSub :: Line -> Line -> Line
 lineSub (Line vec d) (Line bec b) = (Line (vecSub vec bec) (d - b))
