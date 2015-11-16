@@ -22,7 +22,7 @@ gaussian m v
     | length v /= length (m !! 0) = Nothing
     | otherwise = undefined 
 
-
+{-
 -- | returns a Vector with factors needed for zeroing p ones below the diagonal
 zeroBelowDiagonal :: Matrice -> Int -> Matrice -- anything above one as p makes sense
 zeroBelowDiagonal m p = zeroForEach m (actual (-1) m p)
@@ -32,6 +32,7 @@ zeroBelowDiagonal m p = zeroForEach m (actual (-1) m p)
             let n = (c + 1) `mod` length mat
                 a = (p + n) `mod` length mat
             (calcZeroFactor (mat !! n) a):(actual n mat p)
+-}
 
 zeroForEach :: Matrice -> Vector -> Matrice
 zeroForEach [] _ = []
