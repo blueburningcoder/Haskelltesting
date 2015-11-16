@@ -3,6 +3,8 @@ module GaussianSolver where
 
 type Vector = [Double]
 type Matrice = [Vector] -- with N x N values
+data Line = Vector Double
+data System = [Line]
 
 {-
 -- | returns the size of a Matrice
@@ -23,13 +25,25 @@ gaussian m v
 
 -- | returns a Vector with factors needed for zeroing p ones below the diagonal
 zeroBelowDiagonal :: Matrice -> Int -> Matrice -- anything above one as p makes sense
-zeroBelowDiagonal m p = actual (-1)
+zeroBelowDiagonal m p = zeroForEach m (actual (-1) m p)
     where actual c mat p -- actual :: Int -> Matrice -> Int -> [Double]
-            | c == length' mat = [] -- p says how many below the diagonal
+            | c + 1 == length mat = [] -- p says how many below the diagonal
             | otherwise = do
-            let n = (c + 1) `mod` length' mat
-                a = (p + n) `mod` length' mat
+            let n = (c + 1) `mod` length mat
+                a = (p + n) `mod` length mat
             (calcZeroFactor (mat !! n) a):(actual n mat p)
+
+zeroForEach :: Matrice -> Vector -> Matrice
+zeroForEach [] _ = []
+zeroForEach m v = actual 0 m v
+    where actual i m v
+            | v == [] = m
+            | otherwise = do
+            let c = colToVec m i
+                l = colToVec m ((i + 1) `mod` length m)
+            actual (i + 1) (insMat m (vecOpVec c (vecMult l (head v)) (+)) i) (tail v)
+
+
 
 -- | returns the Vector one needs to multiply with the Matrice in order to get the diagonal to one's only
 oneTheDiagonal :: Matrice -> Vector
@@ -88,7 +102,7 @@ matMultVec' [] _ _ = []
 matMultVec' _ [] _ = []
 matMultVec' mat (v:vec) n = -- init n with 0
         let newMat = insMat mat (vecMult (colToVec mat n) v) n; 
-            nextMat = matMultVec' newMat vec ((n + 1) `mod` length' mat)
+            nextMat = matMultVec' newMat vec ((n + 1) `mod` length mat)
         in if nextMat == [] then newMat else nextMat
 
 -- | getting only one column from the matrice
