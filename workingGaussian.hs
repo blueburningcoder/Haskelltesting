@@ -8,31 +8,44 @@ type Matrice = [Vector]
 data Line = Line Vector Double 
     deriving (Show, Read, Eq, Ord)
 newtype GMatrice = GMatrice { getGMatrice :: [Line] } 
-    deriving (Show, Read, Eq, Ord)
+    deriving (Read, Eq, Ord)
 
 
+instance Show GMatrice where
+    show (GMatrice []) = ""
+    show (GMatrice (l:li)) = (show l) ++ "\n" ++ show (GMatrice li)
+
+
+length' :: GMatrice -> Int
+length' (GMatrice []) = 0
+length' (GMatrice (l:li)) = 1 + (length' (GMatrice li))
 
 
 gaussian :: GMatrice -> Maybe Vector
 gaussian = undefined
 
+-- making all of the diagonal's numbers one
 oneTheDiagonal :: GMatrice -> GMatrice
-oneTheDiagonal = undefined
-
-toGMatrice :: Matrice -> Vector -> GMatrice
-toGMatrice = undefined
+oneTheDiagonal (GMatrice []) = GMatrice []
+oneTheDiagonal m = undefined --actual 0
+    where actual n m
+            | n >= length' m = m
+            | otherwise = undefined
 
 -- zeros every value below the diagonal ( except the lowest line, as of yet)
 zeroBelowDiagonal :: GMatrice -> GMatrice
-zeroBelowDiagonal m = foldf m b zeroThisValue
+zeroBelowDiagonal m = foldf m b zeroThisValue'
 
--- zeros only the lowest line 
+-- zeros only the lowest line
 zeroLowestLine :: GMatrice -> GMatrice
-zeroLowestLine = undefined
+zeroLowestLine m = undefined -- getFittingLine m (getCol m 3)
+
+n = [[x,y] | x <- [0..3], y <- [3]]
 
 -- returns a 'fitting' line for the given line from the given Matrice
 getFittingLine :: GMatrice -> Line -> Line
-getFittingLine = undefined
+getFittingLine (GMatrice []) l = (trace "\n\nNO fitting line\n\n") l
+getFittingLine (GMatrice (l:lines)) line = if lineFittingNotEqual l line then l else getFittingLine (GMatrice lines) line
 
 -- if the lines are 'fitting' in the sense of having zeros at the same places and are not equal
 lineFittingNotEqual :: Line -> Line -> Bool
@@ -50,10 +63,11 @@ foldf m [] _ = m
 foldf m ([x,y]:c) f
     | x < y = foldf (f m x y) c f
         -- foldf (f m (trace ("\nx: " ++ (show x) ++ " y: " ++ show y) x) y) c f
-    | otherwise = 
-        foldf m c f
+    | otherwise = foldf m c f
 
 b = [[x,y] | x <- [0..3], y <- [0..3]] :: [[Int]]
+-- belowDiag = map (\[x,y] -> if x < y then [x,y] else []) [[x,y] | x <- [0..3], y <- [0..3]] :: [[Int]]
+-- b = w ++ [[0,3]]
 
 -- zeroing one explicit value and returning the new Matrice
 zeroThisValue :: GMatrice -> Int -> Int -> GMatrice
@@ -64,6 +78,19 @@ zeroThisValue a@(GMatrice (b@(Line vec d):(c@(Line veC dd)):l)) x 0 =
 zeroThisValue (GMatrice (l:li)) x y = 
         let (GMatrice list) = zeroThisValue (GMatrice (li ++ [l])) x (y-1)
         in GMatrice ([last list] ++ (init list))
+
+-- zeroing with explicit search for fitting line (might overwrite some stuff otherwise)
+zeroThisValue' :: GMatrice -> Int -> Int -> GMatrice
+zeroThisValue' m x 0 = let
+        line    =  getCol m 0
+        fit     =  getFittingLine m line
+        factor  =  calcZeroFactor' line fit x
+        newLine =  lineSub (lineOp fit (*factor)) line
+        in insGMat m newLine 0
+zeroThisValue' (GMatrice (l:li)) x y = 
+        let (GMatrice list) = zeroThisValue' (GMatrice (li ++ [l])) x (y-1)
+        in GMatrice ([last list] ++ (init list))
+
 
 -- subtracting one line from the other
 lineSub :: Line -> Line -> Line
@@ -80,6 +107,16 @@ vecSub (v:vec) (b:bec) = (v - b):(vecSub vec bec)
 calcZeroFactor :: Double -> Double -> Double
 calcZeroFactor d dd = d / dd 
 
+-- calculating the zero-factor for two lines, based on the x-offset
+calcZeroFactor' :: Line -> Line -> Int -> Double
+calcZeroFactor' (Line (v:vec) a) (Line (x:xs) b) 0 = calcZeroFactor v x
+calcZeroFactor' (Line (v:vec) a) (Line (x:xs) b) i = calcZeroFactor' (Line vec a) (Line xs b) (i-1)
+calcZeroFactor' _ _ _ = 0
+
+-- multiplying the resulting factor with the Line results in the x'th number being one
+calcOneFactor :: Line -> Int -> Double
+calcOneFactor (Line vec d) x = recip (vec !! x)
+
 -- inserts the given Line at the given offset in the given GMatrice
 insGMat :: GMatrice -> Line -> Int -> GMatrice
 insGMat (GMatrice (l:li)) nl i 
@@ -88,9 +125,9 @@ insGMat (GMatrice (l:li)) nl i
         
 
 -- might return the wanted line. Nothing if the GMatrice is empty
-getCol :: GMatrice -> Int -> Maybe Line
-getCol (GMatrice []) _ = Nothing
-getCol (GMatrice (l:li)) 0 = Just l
+getCol :: GMatrice -> Int -> Line
+getCol (GMatrice (l:[])) _ = l
+getCol (GMatrice (l:li)) 0 = l
 getCol (GMatrice (l:li)) i = getCol (GMatrice li) (i-1)
 
 -- returns a vector of only the resulting values from the linear expression
