@@ -27,10 +27,10 @@ gaussian = undefined
 -- making all of the diagonal's numbers one
 oneTheDiagonal :: GMatrice -> GMatrice
 oneTheDiagonal (GMatrice []) = GMatrice []
-oneTheDiagonal m = undefined --actual 0
+oneTheDiagonal m = actual 0 m
     where actual n m
             | n >= length' m = m
-            | otherwise = undefined
+            | otherwise = actual (n+1) (insGMat m (lineOp (getCol m n) (*(calcOneFactor (getCol m n) n))) n)
 
 -- zeros every value below the diagonal ( except the lowest line, as of yet)
 zeroBelowDiagonal :: GMatrice -> GMatrice
@@ -121,7 +121,8 @@ calcOneFactor (Line vec d) x = recip (vec !! x)
 insGMat :: GMatrice -> Line -> Int -> GMatrice
 insGMat (GMatrice (l:li)) nl i 
         | i == 0 = GMatrice (nl:li)
-        | otherwise = insGMat (GMatrice li) nl (i - 1)
+        | otherwise = (GMatrice (l:(getGMatrice (insGMat (GMatrice  li) nl (i-1)))))
+--         | otherwise = insGMat (GMatrice li) nl (i - 1)
         
 
 -- might return the wanted line. Nothing if the GMatrice is empty
@@ -156,3 +157,5 @@ vecOp (v:vec) f = (f v):(vecOp vec f)
 
 -- testing Matrice
 matTest = GMatrice $ (Line [3.0, 1, 4, -1] 7.0):(Line [2.0, -2, -1, 2] 1):(Line [5.0, 7, 14, -8] 20):(Line [1.0, 3, 2, 4] (-4.0)):[]
+
+lineTest = Line [2.0, 6, 2, 1] 3
