@@ -44,7 +44,6 @@ zeroForEach m v = actual 0 m v
                 l = colToVec m ((i + 1) `mod` length m)
             actual (i + 1) (insMat m (vecOpVec c (vecMult l (head v)) (+)) i) (tail v)
 
-
 -- | returns the Vector one needs to multiply with the Matrice in order to get the diagonal to one's only
 oneTheDiagonal :: Matrice -> Vector
 oneTheDiagonal [] = []
