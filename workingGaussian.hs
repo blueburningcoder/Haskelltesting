@@ -16,13 +16,23 @@ instance Show GMatrice where
     show (GMatrice (l:li)) = (show l) ++ "\n" ++ show (GMatrice li)
 
 
+-- returns the length of the GMatrice
 length' :: GMatrice -> Int
 length' (GMatrice []) = 0
 length' (GMatrice (l:li)) = 1 + (length' (GMatrice li))
 
 
-gaussian :: GMatrice -> Maybe Vector
+gaussian :: GMatrice -> Vector
 gaussian = undefined
+-- gaussian m = oneTheDiagonal . zeroBelowDiagonal $ m
+
+
+solveIt :: GMatrice -> Vector
+solveIt (GMatrice l) = undefined
+
+solveLine :: Line -> Vector -> Vector
+solveLine (Line vec d) v = 
+
 
 -- making all of the diagonal's numbers one
 oneTheDiagonal :: GMatrice -> GMatrice
