@@ -1,3 +1,7 @@
+import Data.Monoid
+-- not needed for most things
+
+
 
 
 class Tofu t where
@@ -48,6 +52,15 @@ bar =
 -- infixl 4 <$>
 -- (<$>) :: Functor f => (a -> b) -> f a -> f b
 -- f <$> x = fmap f x
+
+
+
+
+
+lengthCompare :: String -> String -> Ordering
+lengthCompare x y = (length x `compare` length y) `mappend` (x `compare` y)
+
+
 
 
 
