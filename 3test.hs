@@ -1,4 +1,5 @@
 import Data.Monoid
+import qualified Data.Foldable as F
 -- not needed for most things
 
 
@@ -60,6 +61,63 @@ bar =
 lengthCompare :: String -> String -> Ordering
 lengthCompare x y = (length x `compare` length y) `mappend` (x `compare` y)
 
+
+
+data Tree a = Empty | Node a (Tree a) (Tree a) deriving (Show, Read, Eq)
+
+{-
+instance Monoid Tree where
+    mempty = Empty
+    mappend
+-}
+
+instance F.Foldable Tree where
+    foldMap f Empty = mempty
+    foldMap f (Node x l r) = F.foldMap f l `mappend`
+                             f x           `mappend`
+                             F.foldMap f r
+hasValue :: (F.Foldable t, Eq a) => t a -> a -> Bool
+hasValue fb val= getAny $ F.foldMap (\x -> Any $ x == val) fb
+
+
+
+testTree = Node 5  
+            (Node 3  
+                (Node 1 Empty Empty)  
+                (Node 6 Empty Empty)  
+            )  
+            (Node 9  
+                (Node 8 Empty Empty)  
+                (Node 10 Empty Empty)  
+            )  
+
+applyMaybe :: Maybe a -> (a -> Maybe b) -> Maybe b
+applyMaybe Nothing _ = Nothing
+applyMaybe (Just x) f = f x
+
+
+(-:) :: a -> (a -> b) -> b
+x -: f = f x
+infixl 3 -:
+
+type Birds = Int
+type Pole = (Birds, Birds)
+
+landLeft :: Birds -> Pole -> Pole
+landLeft n (l, r) = (l+n,r)
+
+landRight :: Birds -> Pole -> Pole
+landRight n (l, r) = (l,r+n)
+
+landLeft' :: Birds -> Pole -> Maybe Pole
+landLeft' n (l,r)
+    | abs ((l+n)-r) < 4 = Just (l+n,r)
+    | otherwise         = Nothing
+
+landRight' :: Birds -> Pole -> Maybe Pole
+landRight' n (l,r)
+    | abs (l-(r+n)) < 4 = Just (l,r+n)
+    | otherwise         = Nothing
 
 
 
