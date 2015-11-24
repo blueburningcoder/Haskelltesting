@@ -12,27 +12,51 @@ newtype GMatrice = GMatrice { getGMatrice :: [Line] }
 
 
 instance Show GMatrice where
-    show (GMatrice []) = ""
+    show (GMatrice [])     = "\b"
     show (GMatrice (l:li)) = (show l) ++ "\n" ++ show (GMatrice li)
 
 
 -- returns the length of the GMatrice
 length' :: GMatrice -> Int
-length' (GMatrice []) = 0
+length' (GMatrice [])     = 0
 length' (GMatrice (l:li)) = 1 + (length' (GMatrice li))
 
+init' :: GMatrice -> GMatrice
+init' (GMatrice []) = undefined
+init' (GMatrice l)  = GMatrice (init l)
+
+last' :: GMatrice -> Line
+last' (GMatrice []) = undefined
+last' (GMatrice l)  = last l
+
+head' :: GMatrice -> Line 
+head' (GMatrice []) = undefined
+head' (GMatrice l)  = head l
+
+tail' :: GMatrice -> GMatrice
+tail' (GMatrice []) = undefined
+tail' (GMatrice l) = GMatrice (tail l)
+
+(+++) :: GMatrice -> GMatrice -> GMatrice
+(+++) (GMatrice l) (GMatrice v) = (GMatrice (l ++ v))
+infixl 4 +++
 
 gaussian :: GMatrice -> Vector
-gaussian = undefined
+gaussian = solveGMatrice . oneTheDiagonal . zeroBelowDiagonal 
 -- gaussian m = oneTheDiagonal . zeroBelowDiagonal $ m
 
+-- actually solving the GMatrice
+solveGMatrice :: GMatrice -> Vector
+solveGMatrice m
+    | length' m > 1  = solveLine (head' m) $ solveGMatrice (tail' m)
+    | length' m == 1 = solveLine (last' m) []
+    | otherwise = undefined
 
-solveIt :: GMatrice -> Vector
-solveIt (GMatrice l) = undefined
-
-solveLine :: Line -> Vector -> Vector
-solveLine (Line vec d) v = 
-
+-- solving the given Line with the Vector including the xn already solved which might be needed
+solveLine :: Line -> Vector -> Vector -- or Double ? 
+solveLine (Line vec d) v 
+    | length v == 0 = [d / (last vec)]
+    | otherwise = (solveLine (Line (init vec) (d - (last vec) * (last v))) (init v)) ++ [last v]
 
 -- making all of the diagonal's numbers one
 oneTheDiagonal :: GMatrice -> GMatrice
@@ -49,6 +73,7 @@ zeroBelowDiagonal m = foldf m b zeroThisValue'
 -- zeros only the lowest line
 zeroLowestLine :: GMatrice -> GMatrice
 zeroLowestLine m = undefined -- getFittingLine m (getCol m 3)
+
 
 n = [[x,y] | x <- [0..3], y <- [3]]
 
@@ -169,3 +194,5 @@ vecOp (v:vec) f = (f v):(vecOp vec f)
 matTest = GMatrice $ (Line [3.0, 1, 4, -1] 7.0):(Line [2.0, -2, -1, 2] 1):(Line [5.0, 7, 14, -8] 20):(Line [1.0, 3, 2, 4] (-4.0)):[]
 
 lineTest = Line [2.0, 6, 2, 1] 3
+
+m = oneTheDiagonal . zeroBelowDiagonal $ matTest
