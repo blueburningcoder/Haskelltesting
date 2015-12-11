@@ -42,8 +42,9 @@ tail' (GMatrice l) = GMatrice (tail l)
 infixl 4 +++
 
 gaussian :: GMatrice -> Vector
-gaussian = solveGMatrice . oneTheDiagonal . zeroBelowDiagonal 
--- gaussian m = oneTheDiagonal . zeroBelowDiagonal $ m
+gaussian p
+    | length' p /= (length . getVect . getCol p $ 0) = []
+    | otherwise = solveGMatrice . oneTheDiagonal . zeroBelowDiagonal $ p
 
 -- actually solving the GMatrice
 solveGMatrice :: GMatrice -> Vector
@@ -165,6 +166,10 @@ getCol :: GMatrice -> Int -> Line
 getCol (GMatrice (l:[])) _ = l
 getCol (GMatrice (l:li)) 0 = l
 getCol (GMatrice (l:li)) i = getCol (GMatrice li) (i-1)
+
+-- returns only the vector of the line
+getVect :: Line -> Vector
+getVect (Line v d) = v
 
 -- returns a vector of only the resulting values from the linear expression
 getVal :: GMatrice -> Vector
