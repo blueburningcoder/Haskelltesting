@@ -127,10 +127,11 @@ landRight' n (l,r)
 
 
 
--- a > b, returns the biggest divisor of both numbers
+-- returns the biggest divisor of both numbers, a > b does not matter
 euklidian :: Int -> Int -> Int
 euklidian a b 
     | b == 0 = a
     | otherwise = euklidian b $ a - div a b * b
+
 
 
