@@ -12,7 +12,7 @@ newtype GMatrice = GMatrice { getGMatrice :: [Line] }
 
 
 instance Show GMatrice where
-    show (GMatrice [])     = "\b"
+    show (GMatrice [])     = ""
     show (GMatrice (l:li)) = (show l) ++ "\n" ++ show (GMatrice li)
 
 
