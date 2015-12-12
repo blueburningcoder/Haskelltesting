@@ -69,6 +69,7 @@ show' ((i, b):xs) = do
     show' xs
 
 
+-- testing the collatz-assumption
 
 collNext :: Int -> Int
 collNext n 
