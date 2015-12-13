@@ -135,3 +135,30 @@ euklidian a b
 
 
 
+-- Euler's phi-function
+phi :: Int -> [Int]
+phi 1 = [] -- TODO: finish
+phi n = undefined
+phi n = ():(phi n - 1)
+phi n = [k | 1 <= k < n, euklidian k n == 1, k <- [1..n]]
+-- phi n = n - 1
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
