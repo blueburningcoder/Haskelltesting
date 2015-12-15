@@ -10,11 +10,14 @@ data Line = Line Vector Double
 newtype GMatrice = GMatrice { getGMatrice :: [Line] } 
     deriving (Read, Eq, Ord)
 
+mAX_MATRICE_LENGTH = 12
 
 instance Show GMatrice where
     show (GMatrice [])     = ""
     show (GMatrice (l:li)) = (show l) ++ "\n" ++ show (GMatrice li)
 
+eq :: Line -> Line -> Bool
+eq (Line vec d) (Line cec b) = d == b && (take mAX_MATRICE_LENGTH vec) == (take mAX_MATRICE_LENGTH cec)
 
 -- returns the length of the GMatrice
 length' :: GMatrice -> Int
@@ -99,9 +102,7 @@ oneLine = Line [1,1..2] 1
 -- returns a 'fitting' line for the given line from the given Matrice
 getFittingLine :: GMatrice -> Line -> Line
 getFittingLine (GMatrice []) l       = (trace "\n\nNO fitting line\n\n") oneLine
-getFittingLine (GMatrice (l:lines)) line 
-        | lineFittingNotEqual l line = l 
-        | otherwise                  = getFittingLine (GMatrice lines) line
+getFittingLine (GMatrice (l:lines)) line = if lineFittingNotEqual l line then l else getFittingLine (GMatrice lines) line
 
 -- if the lines are 'fitting' in the sense of having zeros at the same places and are not equal
 lineFittingNotEqual :: Line -> Line -> Bool
@@ -122,9 +123,11 @@ foldf m ([x,y]:c) f
         -- foldf (f m (trace ("\nx: " ++ (show x) ++ " y: " ++ show y) x) y) c f
     | otherwise = foldf m c f
 
+
 -- b = [[x,y] | x <- [0..3], y <- [0..3]] :: [[Int]]
 -- belowDiag = map (\[x,y] -> if x < y then [x,y] else []) [[x,y] | x <- [0..3], y <- [0..3]] :: [[Int]]
 -- b = w ++ [[0,3]]
+
 
 -- zeroing one explicit value and returning the new Matrice
 zeroThisValue :: GMatrice -> Int -> Int -> GMatrice
@@ -136,19 +139,9 @@ zeroThisValue m x y =
         let mat = zeroThisValue (tail' m +++ GMatrice [head' m]) x (y-1)
         in GMatrice [last' mat] +++ init' mat
 
+
 -- zeroing with explicit search for fitting line (might overwrite some stuff otherwise)
 zeroThisValue' :: GMatrice -> Int -> Int -> GMatrice
-zeroThisValue' m x y =
-    if (trace . show $ b) b then zeroThisValue' ((init' . init' $ m) +++ GMatrice [last' m] +++ GMatrice [last' . init' $ m]) x y else
-        if line ! x == 0.0 then m else insGMat m newLine y
-    where
-        line    = getCol m y
-        fit     = getFittingLine m line
-        factor  = calcZeroFactor' line fit x
-        newLine = lineSub (lineOp fit (*factor)) line
-        b = fit == oneLine
-
-{-
 zeroThisValue' m x 0 = let
         line    = getCol m 0
         fit     = getFittingLine m line
@@ -158,7 +151,19 @@ zeroThisValue' m x 0 = let
 zeroThisValue' m x y = 
         let mat = zeroThisValue' (tail' m +++ GMatrice [head' m]) x (y-1)
         in GMatrice [last' mat] +++ init' mat
--}
+
+-- second version, should be more efficient, but is not yet working for some reason with some input
+zeroThisValue'' :: GMatrice -> Int -> Int -> GMatrice
+zeroThisValue'' m x y =
+    if (trace . show $ b) b then zeroThisValue'' ((init' . init' $ m) +++ GMatrice [last' m] +++ GMatrice [last' . init' $ m]) x y 
+        else if line ! x == 0.0 then m else insGMat m newLine y
+    where
+        line    = getCol m y
+        fit     = getFittingLine m line
+        factor  = calcZeroFactor' line fit x
+        newLine = lineSub (lineOp fit (*factor)) line
+        b       = eq fit oneLine
+
 
 -- subtracting one line from the other
 lineSub :: Line -> Line -> Line
