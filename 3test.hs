@@ -103,21 +103,25 @@ infixl 3 -:
 type Birds = Int
 type Pole = (Birds, Birds)
 
-landLeft :: Birds -> Pole -> Pole
-landLeft n (l, r) = (l+n,r)
+landLeft' :: Birds -> Pole -> Pole
+landLeft' n (l, r) = (l+n,r)
 
-landRight :: Birds -> Pole -> Pole
-landRight n (l, r) = (l,r+n)
+landRight' :: Birds -> Pole -> Pole
+landRight' n (l, r) = (l,r+n)
 
-landLeft' :: Birds -> Pole -> Maybe Pole
-landLeft' n (l,r)
+landLeft :: Birds -> Pole -> Maybe Pole
+landLeft n (l,r)
     | abs ((l+n)-r) < 4 = Just (l+n,r)
     | otherwise         = Nothing
 
-landRight' :: Birds -> Pole -> Maybe Pole
-landRight' n (l,r)
+landRight :: Birds -> Pole -> Maybe Pole
+landRight n (l,r)
     | abs (l-(r+n)) < 4 = Just (l,r+n)
     | otherwise         = Nothing
+
+banana :: Pole -> Maybe Pole
+banana _ = Nothing
+
 
 
 
@@ -134,7 +138,7 @@ euklidian a b
     | otherwise = euklidian b $ a - div a b * b
 
 
-
+{-
 -- Euler's phi-function
 phi :: Int -> [Int]
 phi 1 = [] -- TODO: finish
@@ -142,6 +146,7 @@ phi n = undefined
 phi n = ():(phi n - 1)
 phi n = [k | 1 <= k < n, euklidian k n == 1, k <- [1..n]]
 -- phi n = n - 1
+-}
 
 
 
