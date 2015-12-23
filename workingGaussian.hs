@@ -119,7 +119,7 @@ foldfit (l:li) (x:xs) b = (foldfit li xs) (b == True && ( (l == 0.0 && x == 0.0)
 foldf :: GMatrice -> [[Int]] -> (GMatrice -> Int -> Int -> GMatrice) -> GMatrice
 foldf m [] _ = m
 foldf m ([x,y]:c) f
-    | x < y = (trace . show $ m) foldf (f m x y) c f
+    | x < y = foldf (f m x y) c f
         -- foldf (f m (trace ("\nx: " ++ (show x) ++ " y: " ++ show y) x) y) c f
     | otherwise = foldf m c f
 
@@ -155,7 +155,7 @@ zeroThisValue' m x y =
 -- second version, should be more efficient, but is not yet working for some reason with some input
 zeroThisValue'' :: GMatrice -> Int -> Int -> GMatrice
 zeroThisValue'' m x y =
-    if (trace . show $ b) b then zeroThisValue'' ((init' . init' $ m) +++ GMatrice [last' m] +++ GMatrice [last' . init' $ m]) x y 
+    if b then zeroThisValue'' ((init' . init' $ m) +++ GMatrice [last' m] +++ GMatrice [last' . init' $ m]) x y 
         else if line ! x == 0.0 then m else insGMat m newLine y
     where
         line    = getCol m y
