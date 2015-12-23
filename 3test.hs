@@ -1,5 +1,7 @@
 import Data.Monoid
 import qualified Data.Foldable as F
+import Data.List
+import Debug.Trace
 -- not needed for most things
 
 
@@ -131,6 +133,8 @@ banana _ = Nothing
 
 
 
+
+
 -- returns the biggest divisor of both numbers, a > b does not matter
 euklidian :: Int -> Int -> Int
 euklidian a b 
@@ -156,6 +160,177 @@ phi n = [k | 1 <= k < n, euklidian k n == 1, k <- [1..n]]
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+--                  Haskell - workshop
+
+data Person = MkPerson
+        { lastName  :: String
+        , givenName :: String
+        , birthday  :: String }
+    deriving (Show)
+
+
+sortPersons :: [Person] -> [Person]
+sortPersons = sortBy (comparing' lastName)
+
+
+comparing' :: (Ord a) => (b -> a) -> b -> b -> Ordering
+comparing' f a b = compare (f a) (f b)
+
+
+persons = (MkPerson "lastname" "firstname" "1990"):(MkPerson "2lastName" "2firstName" "1995"):[]
+
+
+{-
+instance (Monoid a) => Monoid (e -> a) where
+    mempty _ = mempty -- 'a'
+    mappend b c = \e -> mappend (b e) (c e)
+-}
+
+
+class Finite a where
+    elems :: [a]
+
+
+instance Finite Bool where
+    elems = [True, False]
+
+instance Finite a => Finite (Maybe a) where
+    elems = el elems
+        where el (a:ab) = (Just a):(el ab)
+              el [] = []
+
+instance (Finite a, Finite b) => Finite (Either a b) where
+    elems = el elems
+        where el (a:ab) = (Right a):(el ab)
+              el [] = []
+
+instance (Finite a, Finite b) => Finite (a,b) where
+    elems = el elems elems
+        where el (a:ab) (c:cb) = (a,c):(el ab cb)
+              el [] _ = []
+              el _ [] = []
+
+instance (Eq a, Finite a, Finite b) => Finite (a -> b) where
+    elems = undefined
+
+exhaustiveTest :: (Finite a) => (a -> Bool) -> Bool
+exhaustiveTest f = undefined
+
+instance (Finite a, Eq b) => Eq (a -> b) where
+    (==) = undefined
+
+
+class Countable a where
+    all :: [a]
+
+instance (Countable a, Countable b) => Countable (a,b) where
+    all = undefined
+
+instance Countable a => Countable [a] where
+    all = undefined
+
+
+{-
+type Set a = a -> Bool
+-}
+
+
+-- 32
+main' = getLine >>= putStrLn . reverse 
+
+askForThree = do
+    putStrLn "Please enter a Number"
+    input <- getLine
+    let test = read input
+    if test `mod` 3 == 0 then return "Number is divisable through 3"
+    else askForThree
+
+
+
+replicateM :: Monad m => Int -> m a -> m [a]
+replicateM i a = do
+    b <- a
+    return $ replicate i b
+
+replicateM' :: Monad m => Int -> m a -> m [a]
+replicateM' 0 _ = return []
+replicateM' i a = a >>= (\b -> replicateM' (i-1) a >>= return . (b:) )
+
+{- replicateM''  with replicate and sequence -}
+
+forM :: Monad m => [a] -> (a -> m b) -> m [b]
+forM (a:as) f =  f a >>= (\b -> forM as f >>= return . (b:) )
+forM [] _ = return []
+
+forever :: Monad m => m a -> m b
+forever a = a >> forever a
+
+-- 35
+f :: IO String
+f = getLine
+
+g :: IO ()
+g = readFile "foo.txt" >>= writeFile "bar.txt"
+
+iterateM :: Monad m => (a -> m a) -> a -> m b
+iterateM f a = f a >>= iterateM f
+
+join :: Monad m => m (m a) -> m a
+join a = undefined
+
+whileM :: Monad m => m Bool -> m a -> m [a]
+whileM cond m = cond >>= (\b -> if b then m >>= (\w -> whileM cond m >>= return . (w:)) else return [])
+
+
+
+askNumber :: Int -> IO Ordering
+askNumber n = do
+    putStr "Is your number " >> (putStr . show $ n) >> putStrLn "?"
+    getLine >>= return . read
+--     fmap read getLine
+
+
+guessNumber :: Int -> Int -> IO String
+guessNumber s b = do
+    let an = div (s + b) ((trace (" " ++ show s ++ " "  ++ show b ++ " ")) 2)
+    res <- askNumber an
+    let diff = div (abs (s - b)) 2
+    case res of
+        LT -> guessNumber s (b - diff)
+        GT -> guessNumber (s + diff) b 
+        EQ -> return "got your number!"
+
+guess = guessNumber 0 100
+
+
+-- 40
+
+count :: Eq a => [a] -> a -> Int
+count [] _ = 0
+count (l:li) p
+    | l == p = 1 + count li p
+    | otherwise  = count li p
+
+
+
+freqAn :: Eq a => [a] -> [(a, Int)]
+freqAn [] = []
+freqAn (l:li) = (l, first):(freqAn others)
+    where first = 1 + count li l
+          others = filter (\b -> b /= l) li
+
+ 
 
 
 
