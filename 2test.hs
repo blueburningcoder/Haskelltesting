@@ -63,7 +63,7 @@ main = do                   --     .  .
 
 
 show' :: [(Int, Bool)] -> IO ()
-show' [] = putStrLn "\n\nEnde :)"
+show' [] = putStrLn "\n\nEnd :)"
 show' ((i, b):xs) = do
     putStrLn $ (show b) ++ " for " ++ (show i)
     show' xs
@@ -113,6 +113,7 @@ decode :: [(Int, a)] -> [a]
 decode [] = []
 decode ((i, c):xs) = (take i . repeat $ c) ++ (decode xs)
 -}
+
 
 -- doesn't really make sense ...
 -- encode' :: (a -> Bool) -> [a] -> [[a]]
@@ -233,3 +234,4 @@ instance Monoid All' where
 
 
 
+fibs = 1 : 1 : zipWith (+) fibs (tail fibs)
