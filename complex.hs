@@ -9,6 +9,18 @@ data Complex = Co R R
 instance Show Complex where
     show (Co r i) = show r ++ " " ++ show i ++ "i"
 
+instance Num Complex where
+    (+) = (+:)
+    (*) = (*:)
+    (-) = (-:)
+    abs = cAbs
+    signum = undefined
+    fromInteger = fromInteger'
+
+
+-- | converting an Integer to a complex number
+fromInteger' :: Integer -> Complex
+fromInteger' i = simpleComplex . fromInteger $ i
 
 -- | converting a Real number to a simple Complex one
 simpleComplex :: Double -> Complex
@@ -68,6 +80,9 @@ infixl 7 /-
 (/-) :: Complex -> Double -> Complex
 i /- r = divcomplex i r
 
+cAbs :: (Num a) => Complex -> a
+cAbs c = fromIntegral . floor $ a
+    where (Co a b) = (con c) *: c
 
 
 
@@ -76,3 +91,4 @@ i /- r = divcomplex i r
 complexTest  = Co 3 5
 complexTest2 = Co 5 3
 complexTest3 = Co 7 2
+complexTest4 = Co 2.5 3.3
