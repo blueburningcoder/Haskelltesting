@@ -32,13 +32,18 @@ lastNum = [0,1,2,3,4,5,6,7,8,9] -- == [0..10]
 values = [-4.3, -2.4, -1.2, 0.4, 2.3, 5.9, 10.5, 29.1, 5.3, -2.4, -14.5, 2.9, 2.3]
 
 
-lucky :: (Integral a) => a -> String
+lucky :: Integral a => a -> String
 lucky 7 = "LUCKY NUMBER SEVEN!!"
 lucky x = "Sorry, you're out of luck, pal"
 
-factorial :: (Integral a) => a -> a
+factorial :: Integral a => a -> a
 factorial 0 = 1
 factorial n = n * factorial (n - 1)
+{-
+infixl 6 !
+(!) :: Integral a => a -> a
+a! = factorial a
+-}
 
 charname :: Char -> String
 charname 'a' = "Albert"
