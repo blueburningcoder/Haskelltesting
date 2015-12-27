@@ -14,13 +14,15 @@ instance Num Complex where
     (*) = (*:)
     (-) = (-:)
     abs = cAbs
-    signum = undefined
-    fromInteger = fromInteger'
+    signum = sigComplex
+    fromInteger = fromIntegral'
 
+instance Fractional Complex where
+    (/) = (/:)
 
 -- | converting an Integer to a complex number
-fromInteger' :: Integer -> Complex
-fromInteger' i = simpleComplex . fromInteger $ i
+fromIntegral' :: Integral a => a -> Complex
+fromIntegral' i = simpleComplex . fromIntegral $ i
 
 -- | converting a Real number to a simple Complex one
 simpleComplex :: Double -> Complex
@@ -80,15 +82,28 @@ infixl 7 /-
 (/-) :: Complex -> Double -> Complex
 i /- r = divcomplex i r
 
+-- | returns the rounded absolute value of a Complex number
+-- rounded because it's end type has to be Num 'a'
 cAbs :: (Num a) => Complex -> a
 cAbs c = fromIntegral . floor $ a
     where (Co a b) = (con c) *: c
 
+-- | returns a simpleComplex number with the result of the signum function
+sigComplex :: Complex -> Complex
+sigComplex (Co 0 0) = simpleComplex 0
+sigComplex a = simpleComplex . signum $ e
+    where (Co e _) = a /: (cAbs a)
 
 
+-- recipComplex :: Complex -> Complex
+
+
+-- mandelbrot :: IO ()
 
 
 complexTest  = Co 3 5
 complexTest2 = Co 5 3
 complexTest3 = Co 7 2
 complexTest4 = Co 2.5 3.3
+complexTest5 = Co (-2) (-5)
+
