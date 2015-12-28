@@ -1,0 +1,21 @@
+
+
+cong exp von x = exp von cong x
+
+
+
+
+1 = exp 0 = exp (ix - ix) = exp ix * exp (-ix) = exp ix * exp cong ix = exp ix * cong exp ix = |exp ix|² = 1
+
+exp ix ^= drehung um einen bestimmten winkel φ 
+dann entspricht exp 2ix der drehung um 2φ, und so weiter ...
+
+exp (ix / m) ^= entspricht der drehung um φ/m
+
+conj x * conj y = conj (x * y)
+
+
+
+
+
+
