@@ -1,7 +1,7 @@
 -- returns the biggest divisor of both numbers, a > b does not matter
--- euklidian :: Int -> Int -> Int
--- euklidian a 0 = a
--- euklidian a b = euklidian b $ a - div a b * b
+euklidian :: Int -> Int -> Int
+euklidian a 0 = a
+euklidian a b = euklidian b $ a - div a b * b
 
 -- | taking a Number and returning a list of Numbers this nambers this number can be diveded through evenly
 getPrimeParts :: Int -> [Int]
