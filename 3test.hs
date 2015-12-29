@@ -124,53 +124,6 @@ landRight n (l,r)
 banana :: Pole -> Maybe Pole
 banana _ = Nothing
 
-
-
-
-
-
-
-
-
-
-
-
--- returns the biggest divisor of both numbers, a > b does not matter
-euklidian :: Int -> Int -> Int
-euklidian a b 
-    | b == 0 = a
-    | otherwise = euklidian b $ a - div a b * b
-
-
-{-
--- Euler's phi-function
-phi :: Int -> [Int]
-phi 1 = [] -- TODO: finish
-phi n = undefined
-phi n = ():(phi n - 1)
-phi n = [k | 1 <= k < n, euklidian k n == 1, k <- [1..n]]
--- phi n = n - 1
--}
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 --                  Haskell - workshop
 
 data Person = MkPerson
