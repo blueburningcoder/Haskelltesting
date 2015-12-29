@@ -3,7 +3,9 @@ module Complex where
 
 type R = Double
 
-data Complex = Co R R
+data Complex = Co R R -- First is the Real part, second is the Imagenary
+data Polar = Po R R -- First is the degree, second the distance
+-- needed only later for 
 
 
 instance Show Complex where
@@ -19,6 +21,12 @@ instance Num Complex where
 
 instance Fractional Complex where
     (/) = (/:)
+    recip = recipComplex
+    fromRational = fromRational'
+
+-- | converting a Rational number to a Complex one
+fromRational' :: Rational -> Complex
+fromRational' = undefined
 
 -- | converting an Integer to a complex number
 fromIntegral' :: Integral a => a -> Complex
@@ -48,7 +56,7 @@ r +: i = addComplex r i
 multComplex :: Complex -> Complex -> Complex
 multComplex (Co r i) (Co rr ii) = Co (r * rr - i * ii) (r * i + rr * ii)
 
-infixl 7 *:
+infixl 8 *:
 (*:) :: Complex -> Complex -> Complex
 r *: i = multComplex r i
 
@@ -85,7 +93,7 @@ i /- r = divcomplex i r
 -- | returns the rounded absolute value of a Complex number
 -- rounded because it's end type has to be Num 'a'
 cAbs :: (Num a) => Complex -> a
-cAbs c = fromIntegral . floor $ a
+cAbs c = fromIntegral . floor . sqrt $ a
     where (Co a b) = (con c) *: c
 
 -- | returns a simpleComplex number with the result of the signum function
@@ -94,8 +102,15 @@ sigComplex (Co 0 0) = simpleComplex 0
 sigComplex a = simpleComplex . signum $ e
     where (Co e _) = a /: (cAbs a)
 
+-- | returns a Complex number in a pair of polar coordinates
+toPolar :: Complex -> Polar
+toPolar a@(Co r i) = undefined
+        where b = cAbs a
 
--- recipComplex :: Complex -> Complex
+recipComplex :: Complex -> Complex
+recipComplex (Co 0 0) = undefined
+recipComplex a = c /: a *: c
+        where c = con a
 
 
 -- mandelbrot :: IO ()
