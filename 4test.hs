@@ -1,5 +1,5 @@
 -- returns the biggest divisor of both numbers, a > b does not matter
-euklidian :: Int -> Int -> Int
+euklidian :: Integral a => a -> a -> a
 euklidian a 0 = a
 euklidian a b = euklidian b $ a - div a b * b
 

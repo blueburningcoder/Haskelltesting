@@ -1,5 +1,6 @@
 module Complex where
 
+import Data.Monoid
 
 type R = Double
 
@@ -8,9 +9,11 @@ data Polar = Po R R -- First is the degree, second the distance
 -- needed only later for 
 
 
+-- | to show them a bit differently than they should be displayed, just the way they should be displayed
 instance Show Complex where
     show (Co r i) = show r ++ " " ++ show i ++ "i"
 
+-- | Well the actual exercise was to implement the Num-instance, here it is
 instance Num Complex where
     (+) = (+:)
     (*) = (*:)
@@ -19,10 +22,20 @@ instance Num Complex where
     signum = sigComplex
     fromInteger = fromIntegral'
 
+-- | well it is a Fractional number for some Reason or another, at least we can divide
 instance Fractional Complex where
     (/) = (/:)
     recip = recipComplex
     fromRational = fromRational'
+
+-- | well you can test if two numbers are equal, but not which of them is bigger in any way
+instance Eq Complex where
+    (Co a b) == (Co c d) = a == c && b == d
+
+-- | this would make as much sense with the multiplication operator and the multiplication id, but you can only instantiate it once
+instance Monoid Complex where
+    mempty = simpleComplex 0
+    mappend = (+:)
 
 -- | converting a Rational number to a Complex one
 fromRational' :: Rational -> Complex
@@ -107,15 +120,23 @@ toPolar :: Complex -> Polar
 toPolar a@(Co r i) = undefined
         where b = cAbs a
 
+-- | reciprocalling a Complex number
 recipComplex :: Complex -> Complex
 recipComplex (Co 0 0) = undefined
 recipComplex a = c /: a *: c
         where c = con a
 
+-- | the squareroot of a complex number, note that you need to add plusminus yourself
+sqrtComplex :: Complex -> Complex
+sqrtComplex (Co a b) = Co (sqrt $ (a + c) / 2) ((signum b) * sqrt (((-a) + c) / 2))
+    where c = sqrt $ a * a + b * b
+
+
 
 -- mandelbrot :: IO ()
 
 
+-- some test-complex numbers
 complexTest  = Co 3 5
 complexTest2 = Co 5 3
 complexTest3 = Co 7 2
