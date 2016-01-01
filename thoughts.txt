@@ -14,8 +14,10 @@ exp (ix / m) ^= entspricht der drehung um φ/m
 
 conj x * conj y = conj (x * y)
 
+exp ix = cos x + i * sin x
 
 
 
 
 
+https://www.youtube.com/watch?v=lKQ0yaEJjok
