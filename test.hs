@@ -1,3 +1,5 @@
+#!/usr/bin/env runghc
+
 import Data.List
 import qualified Data.Set as Set
 
