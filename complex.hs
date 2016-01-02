@@ -132,7 +132,7 @@ sigComplex a = simpleComplex . signum $ e
 -- | returns a Complex number in a pair of polar coordinates
 toPolar :: Complex -> Polar
 toPolar a = Po v d
-        where v = cabs a; d = arg a
+    where v = cabs a; d = arg a
 
 -- | takes some degrees in radians and returns them in actual degree
 radToDeg :: R -> R
@@ -142,18 +142,18 @@ radToDeg r = r * 360 / (2 * pi)
 arg :: Complex -> R
 arg (Co r i) 
     | r == 0 && i == 0 = undefined
-    | r == 0 && i > 0 = pi / 2
-    | r == 0 && i < 0 = negate pi / 2
-    | r < 0 && i < 0 = arc - pi
-    | r < 0 && i >= 0 = arc + pi
-    | r > 0 = arc
+    | r == 0 && i > 0  = pi / 2
+    | r == 0 && i < 0  = negate pi / 2
+    | r < 0 && i < 0   = arc - pi
+    | r < 0 && i >= 0  = arc + pi
+    | r > 0            = arc
     where arc = atan (i / r)
 
 -- | reciprocalling a Complex number
 recipComplex :: Complex -> Complex
 recipComplex (Co 0 0) = undefined
 recipComplex a = c /: (a *: c)
-        where c = con a
+    where c = con a
 
 -- | the squareroot of a complex number, note that you need to add plusminus yourself
 sqrtComplex :: Complex -> Complex
@@ -163,6 +163,46 @@ sqrtComplex (Co a b) = Co (sqrt $ (a + c) / 2) ((signum b) * sqrt (((-a) + c) / 
 
 
 -- mandelbrot :: IO ()
+
+-- returns the next Number from the Mandelbrot-se
+mandelNext :: Complex -> Complex -> Complex
+mandelNext z c = z * z + c
+
+-- If this complex result with this initial complex number and so many iterations left is part of the Mandelbrot-set or not
+mandelElem :: Complex -> Complex -> Int -> Bool
+mandelElem z _ 0 = cabs z <= 2
+mandelElem z c n
+    | cabs z <= 2 = mandelElem (mandelNext z c) c (n-1)
+    | otherwise = False
+
+-- if this complex number is part of the Mandelbrot-set or not (with a fixed number of iterations)
+isElem :: Complex -> Bool
+isElem z = mandelElem z z 12
+
+-- the delta for the x- and y-axis
+dx = 1 - (3 / 81)
+dy = 1 - (2 / 26)
+
+-- the values for each of the points to be plotted
+xrange = reverse [1,dx..(-2)]
+yrange = [1,dy..(-1)]
+crange = [toComplex x y | y <- yrange, x <- xrange]
+
+-- splitting and printing it correctly
+printing :: [Bool] -> IO ()
+printing [] = putStrLn "\nFinished plotting the Mandelbrot set"
+printing (l:li) = do
+        putChar c
+        if length li `mod` 82 == 0 then putStr "\n" else putStr ""
+        printing li
+    where c = if l then '*' else '.'
+
+-- plotting the Mandelbrot-set in 82x27-style
+plot :: IO ()
+plot = printing $ map isElem crange
+
+
+
 
 
 -- some test-complex numbers
