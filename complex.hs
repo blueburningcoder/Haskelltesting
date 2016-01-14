@@ -160,15 +160,15 @@ sqrtComplex :: Complex -> Complex
 sqrtComplex (Co a b) = Co (sqrt $ (a + c) / 2) ((signum b) * sqrt (((-a) + c) / 2))
     where c = sqrt $ a * a + b * b
 
-
-
 -- mandelbrot :: IO ()
 
 -- returns the next Number from the Mandelbrot-se
 mandelNext :: Complex -> Complex -> Complex
 mandelNext z c = z * z + c
 
--- If this complex result with this initial complex number and so many iterations left is part of the Mandelbrot-set or not
+-- mandelbrot :: IO ()
+
+-- If this complex result with this initial complex number and so many iterations left is part of the Mandelb
 mandelElem :: Complex -> Complex -> Int -> Bool
 mandelElem z _ 0 = cabs z <= 2
 mandelElem z c n
@@ -200,6 +200,8 @@ printing (l:li) = do
 -- plotting the Mandelbrot-set in 82x27-style
 plot :: IO ()
 plot = printing $ map isElem crange
+
+
 
 
 
