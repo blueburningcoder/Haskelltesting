@@ -43,7 +43,9 @@ instance Monoid Complex where
 
 -- | converting a Rational number to a Complex one
 fromRational' :: Rational -> Complex
-fromRational' = undefined
+fromRational' n = (Co pi 0) 
+-- I haven't figured out why this is (exactly) necessary yet
+-- but the ccos and csin won't wrok otherwise
 
 -- | converting an Integer to a complex number
 fromIntegral' :: Integral a => a -> Complex
@@ -134,6 +136,9 @@ toPolar :: Complex -> Polar
 toPolar a = Po v d
     where v = cabs a; d = arg a
 
+fromPolar :: Polar -> Complex
+fromPolar (Po v d) = (exi (Co 0 d)) * (Co v 0)
+
 -- | takes some degrees in radians and returns them in actual degree
 radToDeg :: R -> R
 radToDeg r = r * 360 / (2 * pi)
@@ -141,12 +146,12 @@ radToDeg r = r * 360 / (2 * pi)
 -- | returns the argument (phase) of the complex value
 arg :: Complex -> R
 arg (Co r i) 
-    | r == 0 && i == 0 = undefined
     | r == 0 && i > 0  = pi / 2
     | r == 0 && i < 0  = negate pi / 2
     | r < 0 && i < 0   = arc - pi
     | r < 0 && i >= 0  = arc + pi
     | r > 0            = arc
+    | otherwise        = undefined
     where arc = atan (i / r)
 
 -- | reciprocalling a Complex number
@@ -198,9 +203,39 @@ printing (l:li) = do
     where c = if l then '*' else '.'
 
 -- plotting the Mandelbrot-set in 82x27-style
-plot :: IO ()
-plot = printing $ map isElem crange
+plotMandel :: IO ()
+plotMandel = printing $ map isElem crange
 
+
+fac :: Integral a => a -> a
+fac 0 = 1
+fac n = n * fac (n-1)
+
+
+e :: R
+e = 2.7182821828245
+
+{-
+esum :: Num a => (a -> a) -> a
+esum f = sum f 100
+    where sum f n = sum f (n-1) + f n
+-}
+
+ex :: R -> R
+ex = (e**)
+
+exi :: Complex -> Complex
+exi (Co 0 i) = Co (cos i) (sin i)
+exi (Co r 0) = Co (ex r) 0
+exi (Co r i) = exi (Co r 0) * exi (Co 0 i)
+
+csin :: R -> R
+csin z = r
+    where (Co r i) = (1 / (Co 0 2)) * (exi (Co 0 z) - exi (Co 0 (-z))) / (Co (2 * pi) 0)
+
+ccos :: R -> R
+ccos z = r
+    where (Co r i) = 0.5 * (exi (Co 0 z) + exi (Co 0 (-z))) / (Co (2 * pi) 0)
 
 
 
