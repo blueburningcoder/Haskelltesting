@@ -1,10 +1,10 @@
 module Voting where 
 
-import System.Random        (mkStdGen, split, randomRs, RandomGen (..))
+import System.Random        (newStdGen, mkStdGen, split, randomRs, RandomGen (..))
 import Data.List            (delete)
 import Control.Applicative  ((<$>))
 import Control.Monad        ((>>=), return)
-import Data.Maybe           (fromJust)
+import Data.Maybe           (fromJust, fromMaybe, isJust)
 
 import Debug.Trace          (trace)
 
@@ -39,6 +39,14 @@ getRandomVoting g n c = let
     rating = getRandomRating g1 c
     in rating:(getRandomVoting g2 (n-1) c)
 
+-- returns a list containing n candidates, based on the RandomGen g
+getRandomCandidates :: RandomGen a => a -> Int -> AllCandidates
+getRandomCandidates _ 0 = []
+getRandomCandidates g n = name:(getRandomCandidates g2 (n-1))
+    where
+    (g1, g2) = split $ g
+    name = getRandomString g1 12
+
 
 -- returns the absolute winner on first place
 absolute :: Voting -> Maybe Candidate
@@ -70,6 +78,7 @@ atPos _ [] _ = 0
 atPos f (v:vo) c = if (f v) == c then 1 + ed else 0 + ed
     where ed = atPos f vo c
 
+
 -- removes a Maybe Candidate from the voting-list after he got counted
 clearOf :: Maybe Candidate -> Voting -> Voting
 clearOf _ [] = []
@@ -83,7 +92,7 @@ empty [] = []
 empty ([]:c) = empty c
 empty ((a:b):c) = ((a:b):empty c)
 
--- uses the hare-method for deciding the winner
+-- uses the hare-method for deciding the overall ranking
 hare :: Voting -> Rating
 hare [] = []
 hare l@(v:vo) = reverse $ (fromJust toRemove):(reverse . hare . empty $ newVoting)
@@ -93,12 +102,36 @@ hare l@(v:vo) = reverse $ (fromJust toRemove):(reverse . hare . empty $ newVotin
     newVoting = clearOf toRemove l
 
 
+-- uses the coombs-method for deciding the overall ranking
+coombs :: Voting -> Rating
+coombs [] = []
+coombs l@(v:vo) = if isJust absol then (fromJust absol):"...":(fromJust toRemove):[] else (reverse $ (fromJust toRemove):(reverse . coombs . empty $ newVoting))
+    where
+    absol = absolute l
+    list = [atPos last l c | c <- v]
+    toRemove = (getIndexOf (maximum list) list) >>= return . (v !!)
+    newVoting = clearOf toRemove l
+
+
+
 -- generating a reproducable random dataset for testing
+(gen1, gen2) = split $ mkStdGen 1698651348996434
 genBegin = 15
+amountOfCandidates = 30
 
 candidates = ["A", "B", "C", "D", "E"]
 voting = let
     gen = mkStdGen genBegin
     (g, _) = split $ gen
-    in getRandomVoting g 30 candidates
+    in getRandomVoting g amountOfCandidates candidates
+
+-- generating a truly random dataset
+newVoting :: AllCandidates -> Int -> IO Voting
+newVoting c n = do
+    g <- newStdGen
+    return . getRandomVoting g n $ c
+
+-- this is a situation the hare makes the better decision (in comparision to relative ...)
+hare_test = (take 29 . repeat $ ["A", "B", "C"]) ++ (take 31 . repeat $ ["B", "A", "C"]) ++ (take 40 . repeat $ ["C", "A", "B"])
+
 
