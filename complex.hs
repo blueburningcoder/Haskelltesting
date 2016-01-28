@@ -206,6 +206,10 @@ printing (l:li) = do
 plotMandel :: IO ()
 plotMandel = printing $ map isElem crange
 
+-- recipComplex :: Complex -> Complex
+
+
+mandelbrot :: IO ()
 
 fac :: Integral a => a -> a
 fac 0 = 1
