@@ -21,7 +21,7 @@ getRandomString :: RandomGen a => a -> Int -> String
 getRandomString _ 0 = []
 getRandomString g n = do
     let (g1, g2) = split $ g
-    (++) (take 1 . randomRs ('a', 'z') $ g1) (getRandomString g2 (n-1))
+    (++) (take 1 . randomRs ('A', 'z') $ g1) (getRandomString g2 (n-1))
 
 -- returns a random Rating based on the RandomGen g and the list of candidates
 getRandomRating :: RandomGen a => a -> AllCandidates -> Rating
@@ -78,6 +78,21 @@ atPos _ [] _ = 0
 atPos f (v:vo) c = if (f v) == c then 1 + ed else 0 + ed
     where ed = atPos f vo c
 
+-- returns the item from the second list that has the same index as the given item in the first list
+getItemAt :: Eq a => a -> [a] -> [b] -> Maybe b
+getItemAt b bi c = getIndexOf b bi >>= return . (c !!)
+
+
+-- sorts a second list the same way it would sort the first list
+sort2 :: (Ord a, Show a, Show b) => [a] -> [b] -> [b]
+sort2 [] [] = []
+sort2 (l:li) (c:ca) = (sort2 sml sma) ++ [c] ++ (sort2 bgl big)
+    where
+    sml = [d | d <- li, d < l]
+    sma = map fromJust . map ((flip . flip getItemAt) li ca) $ sml
+    bgl = [d | d <- li, d > l]
+    big = map fromJust . map ((flip . flip getItemAt) li ca) $ bgl
+
 
 -- removes a Maybe Candidate from the voting-list after he got counted
 clearOf :: Maybe Candidate -> Voting -> Voting
@@ -113,12 +128,43 @@ coombs l@(v:vo) = if isJust absol then (fromJust absol):"...":(fromJust toRemove
     newVoting = clearOf toRemove l
 
 
+{-
+ - French, condorcet, spoken: "condorsei", [kɒndɔːrˈseɪ]
+ -}
+
+
+-- orders two candidates not only on one rating but on all of them
+condorcetPair :: Candidate -> Candidate -> Voting -> Double
+-- condorcetPair can opp v = ((trace ((show res) ++ " " ++ (show . sum $ res) ++ " " ++ (show . length $ res))) (sum res)) `compare` ((fromIntegral $ length res) - sum res)
+condorcetPair can opp v = sum res - 15
+    where
+    list = [condorcetOrdering can opp r | r <- v]
+    res = [case l of LT -> 0.0; EQ -> 0.5; GT -> 1.0 | l <- list] :: [Double]
+
+-- orders two candidates based on the given rating
+condorcetOrdering :: Candidate -> Candidate -> Rating -> Ordering
+condorcetOrdering can opp rat = ordcan `compare` ordopp
+    where
+    last = fromMaybe (length rat)
+    ordcan = last $ getIndexOf can rat >>= (\n -> return $ length rat - n)
+    ordopp = last $ getIndexOf opp rat >>= (\n -> return $ length rat - n)
+
+-- decides the condcetWinner if there is one
+condorcetWinner :: Voting -> Rating
+condorcetWinner v = reverse . sort2 list $ (head v)
+    where
+    pair = [(c,condorcetPair c o v,o) | c <- (head v), o <- (head v), o /= c]
+    summ = [filter (\(c,r,o) -> c == d) pair | d <- (head v)]
+    list = [sum . map (\(c,r,o) -> r) $ d | d <- summ]
+
+
 
 -- generating a reproducable random dataset for testing
 (gen1, gen2) = split $ mkStdGen 1698651348996434
 genBegin = 15
 amountOfCandidates = 30
 
+-- a list of candidates and a reproducable (...) voting
 candidates = ["A", "B", "C", "D", "E"]
 voting = let
     gen = mkStdGen genBegin
