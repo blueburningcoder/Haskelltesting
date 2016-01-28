@@ -151,11 +151,12 @@ condorcetOrdering can opp rat = ordcan `compare` ordopp
 
 -- decides the condcetWinner if there is one
 condorcetWinner :: Voting -> Rating
-condorcetWinner v = reverse . sort2 list $ (head v)
+condorcetWinner v = if length resu /= length (head v) then [] else resu
     where
     pair = [(c,condorcetPair c o v,o) | c <- (head v), o <- (head v), o /= c]
     summ = [filter (\(c,r,o) -> c == d) pair | d <- (head v)]
     list = [sum . map (\(c,r,o) -> r) $ d | d <- summ]
+    resu = reverse . sort2 list $ (head v)
 
 
 
