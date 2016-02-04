@@ -84,7 +84,7 @@ getItemAt b bi c = getIndexOf b bi >>= return . (c !!)
 
 
 -- sorts a second list the same way it would sort the first list
-sort2 :: (Ord a, Show a, Show b) => [a] -> [b] -> [b]
+sort2 :: Ord a => [a] -> [b] -> [b]
 sort2 [] [] = []
 sort2 (l:li) (c:ca) = (sort2 sml sma) ++ [c] ++ (sort2 bgl big)
     where
@@ -151,13 +151,31 @@ condorcetOrdering can opp rat = ordcan `compare` ordopp
 
 -- decides the condcetWinner if there is one
 condorcetWinner :: Voting -> Rating
-condorcetWinner v = if length resu /= length (head v) then [] else resu
+condorcetWinner v = if length resu /= length (head v) then "...":resu else resu
     where
     pair = [(c,condorcetPair c o v,o) | c <- (head v), o <- (head v), o /= c]
     summ = [filter (\(c,r,o) -> c == d) pair | d <- (head v)]
     list = [sum . map (\(c,r,o) -> r) $ d | d <- summ]
     resu = reverse . sort2 list $ (head v)
 
+
+-- there's a bucklin-method too
+bucklin :: Voting -> Int -> Maybe Rating
+bucklin _ 0 = Nothing
+bucklin v i | length (head v) < i = Nothing
+bucklin v i = trace ( show summ ) undefined
+    where
+    positions = [0..(i-1)]
+    summ = [ sum [atPos (!!m) v c | m <- positions] | c <- (head v)]
+
+
+-- borda-method, one might know it from certain sports
+borda :: Voting -> Rating
+borda v = trace ( show (head v) ++ "\n" ++ show summ ++ "\n") sorted
+    where
+    positions = [0..(length (head v) -1)]
+    summ = [ sum [(atPos (!!m) v c) * (length positions -m) | m <- positions] | c <- (head v)]
+    sorted = reverse $ sort2 summ (head v)
 
 
 -- generating a reproducable random dataset for testing
@@ -166,7 +184,7 @@ genBegin = 15
 amountOfCandidates = 30
 
 -- a list of candidates and a reproducable (...) voting
-candidates = ["A", "B", "C", "D", "E"]
+candidates = ["A", "B", "C", "D", "E", "F", "G", "H"]
 voting = let
     gen = mkStdGen genBegin
     (g, _) = split $ gen
@@ -181,4 +199,6 @@ newVoting c n = do
 -- this is a situation the hare makes the better decision (in comparision to relative ...)
 hare_test = (take 29 . repeat $ ["A", "B", "C"]) ++ (take 31 . repeat $ ["B", "A", "C"]) ++ (take 40 . repeat $ ["C", "A", "B"])
 
+
+finished_voting_to_ratings = ["relative", "absolute", "hare", "coombs", "condorceit", " 'bucklin' ", "borda"]
 
