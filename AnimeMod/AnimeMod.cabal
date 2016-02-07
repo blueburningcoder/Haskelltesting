@@ -17,8 +17,10 @@ library
   hs-source-dirs:      src
   exposed-modules:     Anime.Types
                      , Anime.Files
+                     , Anime.Menu
   build-depends:       base == 4.*
                      , binary
+                     , directory
   default-language:    Haskell2010
 
 executable AnimeMod-exe
