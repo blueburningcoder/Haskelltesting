@@ -3,6 +3,8 @@ module Anime.Files where
 import Anime.Types
 import Data.Binary (Binary (..), Get, encodeFile, decodeFile)
 import System.IO (hFlush, stdout)
+import System.Directory (doesFileExist)
+
 
 -- the name of the Binary file including the list of Anime
 fileDir :: String
@@ -32,7 +34,9 @@ saveOther ot = do
 
 -- Loading a list of Anime from the Disk
 loadList :: IO CompleteCollection
-loadList = decodeFile $! fileDir
+loadList = do
+    exist <- doesFileExist fileDir
+    if exist then decodeFile $! fileDir else saveComplete (Co [] [] []) >> loadList
 
 -- showing the List of Anime
 showAnimeList :: IO ()
