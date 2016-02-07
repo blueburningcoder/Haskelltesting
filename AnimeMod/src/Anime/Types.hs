@@ -63,6 +63,9 @@ type WatchedE = Episodes
 data Anime = Anime String Rating Episodes WatchedE
     deriving (Eq)
 
+name :: Anime -> String
+name (Anime name _ _ _) = name
+
 instance Binary Anime where
     put (Anime nam rat ep wa) = do
         put nam
