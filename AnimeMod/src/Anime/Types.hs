@@ -16,6 +16,7 @@ instance Binary Genres where
     get = do gen <- get
              return $ read gen
 
+{-
 -- A Rating usually consists of a list of genres and a list of their individual scores, 1-10 respectively
 data Rating = None | Rating [Genres] [Int] Double
     deriving (Read, Eq)
@@ -41,21 +42,41 @@ instance Binary Rating where
 instance Show Rating where
     show None = "•not available•"
     show (Rating _ _ o) = show o
+-}
+
+-- a Rating is either nothing or some double value
+data Rating = None | Rating Double
+    deriving (Read, Show, Eq, Ord)
+
+instance Binary Rating where
+    put None = do put (0 :: Int)
+    put (Rating r) =
+        do put (1 :: Int)
+           put r
+    get = do t <- get :: Get Int
+             case t of
+                0 -> return None
+                1 -> do r <- get; return (Rating r)
 
 -- The number of Episodes is either Unknown, Zero (yet), or some Int
-data Episodes = Unknown | Zero | Int
-    deriving (Show, Read, Eq, Ord)
+data Episodes = Unknown | Zero | Episodes Int
+    deriving (Read, Eq, Ord)
+
+instance Show Episodes where
+    show Unknown        = "Unknown"
+    show Zero           = "Zero"
+    show (Episodes num) = show num
 
 instance Binary Episodes where
-    put Unknown = put (-1 :: Int)
-    put Zero    = put (0 :: Int)
-    put num     = put (1 :: Int) >> put num
+    put Unknown         = put (-1 :: Int)
+    put Zero            = put (0 :: Int)
+    put (Episodes num)  = put (1 :: Int) >> put num
 
     get = do t <- get :: Get Int
              case t of
               (-1) -> return Unknown
               0 -> return Zero
-              1 -> do num <- get; return num
+              1 -> do num <- get; return (Episodes num)
 
 type WatchedE = Episodes
 
@@ -80,7 +101,7 @@ instance Binary Anime where
         return $ Anime nam rat ep wa
 
 instance Show Anime where
-    show (Anime name rat ep wa) = "Anime: " ++ show name ++ " with rating: " ++ show rat ++ " and " ++ show wa ++ "/" ++ show ep ++ " seen.\n"
+    show (Anime name rat wa ep) = "Anime: " ++ show name ++ " with " ++ show rat ++ " and " ++ show wa ++ "/" ++ show ep ++ " seen.\n"
  
 
 type AllAnime = [Anime]
