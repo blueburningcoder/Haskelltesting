@@ -12,7 +12,9 @@ fileDir = "anime.bin"
 
 -- Saving a list of Anime to the Disk
 saveComplete :: CompleteCollection -> IO ()
-saveComplete = encodeFile $! fileDir
+saveComplete c = do
+        encodeFile fileDir $! c
+        putStrLn "Saved"
 
 -- saves the modified 'watched'-field
 saveWatched :: WatchedAnime -> IO ()
