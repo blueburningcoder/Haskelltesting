@@ -2,8 +2,9 @@ module Anime.Types where
 
 
 import Data.Binary (Binary (..), Get, encodeFile, decodeFile)
+import Debug.Trace (trace)
 
-
+{-
 -- All kinda genres that an anime might or might not have
 data Genres = Action | Adventure | Comedy | Crime | Fantasy | Fiction | Historical | Horror | Magical 
         | Mystery | Paranoid | Philosophical | Political | Romance | Saga | Satire | ScienceFiction 
@@ -16,7 +17,6 @@ instance Binary Genres where
     get = do gen <- get
              return $ read gen
 
-{-
 -- A Rating usually consists of a list of genres and a list of their individual scores, 1-10 respectively
 data Rating = None | Rating [Genres] [Int] Double
     deriving (Read, Eq)
@@ -78,30 +78,32 @@ instance Binary Episodes where
               0 -> return Zero
               1 -> do num <- get; return (Episodes num)
 
-type WatchedE = Episodes
+type ID = Int
+type Name = String
 
 -- an anime usually consists of the name, the rating, the episodes and the episodes watched
-data Anime = Anime String Rating Episodes WatchedE
-    deriving (Eq)
+data Anime = Anime { getId :: ID, name :: Name, rating :: Rating, watchedEp :: Episodes, totalEp ::  Episodes }
 
-name :: Anime -> String
-name (Anime name _ _ _) = name
+instance Eq Anime where
+    (Anime id _ _ _ _) == (Anime iD _ _ _ _) = id == iD
 
 instance Binary Anime where
-    put (Anime nam rat ep wa) = do
+    put (Anime id nam rat ep wa) = do
+        put id
         put nam
         put rat
         put ep
         put wa
     get = do
+        id <- get
         nam <- get
         rat <- get
         ep <- get
         wa <- get
-        return $ Anime nam rat ep wa
+        return $ Anime id nam rat ep wa
 
 instance Show Anime where
-    show (Anime name rat wa ep) = "Anime: " ++ show name ++ " with " ++ show rat ++ " and " ++ show wa ++ "/" ++ show ep ++ " seen.\n"
+    show (Anime id name rat wa ep) = "Anime with id " ++ show id ++ " is " ++ show name ++ " with " ++ show rat ++ " and " ++ show wa ++ "/" ++ show ep ++ " seen.\n"
  
 
 type AllAnime = [Anime]
