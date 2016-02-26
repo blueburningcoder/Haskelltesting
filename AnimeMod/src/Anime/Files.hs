@@ -1,61 +1,85 @@
 module Anime.Files where
 
+import General
 import Anime.Types
 import Data.Binary (Binary (..), Get, encodeFile, decodeFile)
 import System.Directory (doesFileExist)
-import Data.List (find)
+import Data.List (find, sort, delete)
+import Data.IORef
+import Debug.Trace (trace)
 
+
+-- | returns the highest id of all currently known Anime
 highestId :: IO ID
 highestId = completeList >>= return . (\a -> maximum . map getId $! a)
 
--- the name of the Binary file including the list of Anime
+-- | the name of the Binary file including the list of Anime
 fileDir :: String
 fileDir = "anime.bin"
 
--- Saving a list of Anime to the Disk
+-- | Saving a list of Anime to the Disk
 saveComplete :: CompleteCollection -> IO ()
 saveComplete c = do
   encodeFile fileDir $! c
   putStrLn "Saved"
 
--- saves the modified 'watched'-field
+-- | saves the modified 'watched'-field
 saveWatched :: WatchedAnime -> IO ()
 saveWatched w = do
   (Co _ ne ot) <- loadList
   saveComplete $! (Co w ne ot)
 
--- saves the modified 'next'-field
+-- | returns all watched Anime
+getWatched :: IO WatchedAnime
+getWatched = loadList >>= return . watched
+
+-- | saves the modified 'next'-field
 saveNext :: NextAnime -> IO ()
 saveNext ne = do
   (Co wa _ ot) <- loadList
   saveComplete $! (Co wa ne ot)
 
--- saves the modified 'other'-field
+-- | returns all next Anime
+getNext :: IO NextAnime
+getNext = loadList >>= return . next
+
+-- | saves the modified 'other'-field
 saveOther :: OtherAnime -> IO ()
 saveOther ot = do
   (Co wa ne _) <- loadList
   saveComplete $! (Co wa ne ot)
 
--- Loading a list of Anime from the Disk
+-- | returns all other Anime
+getOther :: IO OtherAnime
+getOther = loadList >>= return . other
+
+-- | Loading a list of Anime from the Disk
 load :: IO CompleteCollection
-load = do
+load = trace "Loading File ..." $ do
   exist <- doesFileExist fileDir
   if exist then decodeFile $! fileDir else saveComplete (Co [] [] []) >> load
 
--- strictness prevents reloading ?
+-- | returns the saved IORef and thus prevents rereading the binary file
 loadList :: IO CompleteCollection
-loadList = id $! load
+loadList = do
+  ref <- refComplete
+  red <- readIORef ref
+  return red
 
--- returns a list of all Anime known
+-- | initially saves the IORef
+refComplete :: IO (IORef CompleteCollection)
+refComplete = load >>= newIORef
+
+-- | returns a list of all Anime known
 completeList :: IO AllAnime
 completeList = loadList >>= return . (\co -> watched co ++ next co ++ other co)
 
--- showing the List of Anime
+-- | showing the List of Anime
 showAnimeList :: IO ()
 showAnimeList = loadList >>= print
 
 
--- gets the single Anime with this Name
+-- | gets the single Anime with this Name
 getAnimeWithName :: String -> IO (Maybe Anime)
 getAnimeWithName nam = do
   list <- completeList
@@ -63,12 +87,37 @@ getAnimeWithName nam = do
   return res
 
 
--- gets the single Anime with this ID
+-- | gets the single Anime with this ID
 getAnimeWithId :: ID -> IO (Maybe Anime)
 getAnimeWithId iD = do
   list <- completeList
   let res = find (\a -> getId a == iD) list
   return res
 
+
+-- | adding an Anime to the saved binary
+addAnime :: Anime -> IO ()
+addAnime new = do
+  oth <- (loadList >>= return . other)
+  saveOther $! addToEnd oth new
+
+
+-- | sorting the list of known Anime
+sortAnime :: IO ()
+sortAnime = applyToAll sort
+
+
+-- | deleting the selected Anime
+deleteAnime :: Anime -> IO ()
+deleteAnime anime = applyToAll (delete anime)
+
+
+-- | applies the given function to all three lists of Anime
+applyToAll :: (AllAnime -> AllAnime) -> IO ()
+applyToAll f = loadList >>= saveComplete . putInside f
+
+-- | applies a function to every list of Animes
+putInside :: (AllAnime -> AllAnime) -> CompleteCollection -> CompleteCollection
+putInside f (Co wa ne ot) = Co (f wa) (f ne) (f ot)
 
 

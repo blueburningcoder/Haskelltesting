@@ -18,6 +18,7 @@ library
   exposed-modules:     Anime.Types
                      , Anime.Files
                      , Anime.Menu
+                     , General
   build-depends:       base == 4.*
                      , binary
                      , directory
