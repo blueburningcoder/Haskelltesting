@@ -57,7 +57,7 @@ getOther = loadList >>= return . other
 load :: IO CompleteCollection
 load = trace "Loading File ..." $ do
   exist <- doesFileExist fileDir
-  if exist then decodeFile $! fileDir else saveComplete (Co [] [] []) >> load
+  if exist then decodeFile $! fileDir else saveComplete (Co [] [] [Anime 1 "Test, please edit" NoRating Unknown Unknown]) >> load
 
 -- | returns the saved IORef and thus prevents rereading the binary file
 loadList :: IO CompleteCollection
@@ -112,7 +112,7 @@ deleteAnime :: Anime -> IO ()
 deleteAnime anime = applyToAll (delete anime)
 
 
--- | applies the given function to all three lists of Anime
+  -- | applies the given function to all three lists of Anime
 applyToAll :: (AllAnime -> AllAnime) -> IO ()
 applyToAll f = loadList >>= saveComplete . putInside f
 
@@ -120,4 +120,14 @@ applyToAll f = loadList >>= saveComplete . putInside f
 putInside :: (AllAnime -> AllAnime) -> CompleteCollection -> CompleteCollection
 putInside f (Co wa ne ot) = Co (f wa) (f ne) (f ot)
 
+-- acually sorting them in the right category
+sortAllAnime :: IO ()
+sortAllAnime = completeList >>= saveComplete . (foldl sortToRightCategory (Co [] [] []) )
+
+-- sorting one Anime in the Right category
+sortToRightCategory :: CompleteCollection -> Anime -> CompleteCollection
+sortToRightCategory (Co wa ne ot) a@(Anime _ _ NoRating   Unknown   Unknown   ) = Co wa ne (addToEnd ot a)
+sortToRightCategory (Co wa ne ot) a@(Anime _ _ NoRating   w       (Episodes t)) =
+  if w == (Episodes t) then Co (addToEnd wa a) ne ot else Co wa (addToEnd ne a) ot
+sortToRightCategory (Co wa ne ot) a@(Anime _ _   _        _         _         ) = Co (addToEnd wa a) ne ot
 

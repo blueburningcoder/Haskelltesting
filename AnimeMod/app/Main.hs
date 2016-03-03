@@ -18,7 +18,7 @@ main = do
       "del"  -> selectAnime "Please enter the name or id of the Anime you wish to delete. : " >>= deleteAnime
       "edit" -> edit $ tail args
       "help" -> help
-      "sort" -> prompt "Please enter. " >> sortAnime -- for some mysterious reason this won't work otherwise.
+      "sort" -> prompt "Please Note that this might take some time. \nDo you wish to continue? " >> sortAllAnime -- for some mysterious reason this won't work otherwise.
       _ -> putStrLn "This feature is not yet implemented ._."
 
 

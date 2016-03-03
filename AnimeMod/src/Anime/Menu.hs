@@ -60,7 +60,7 @@ isSame n li = if elem n $ map name li then return . fromJust . find (\a -> name 
 
 -- | editing the information about an Anime
 edit :: [String] -> IO ()
-edit []   = prompt "What property do you want to edit? : " >>= (\p -> prompt "What's the name of the Anime you want to edit? : " >>= (\n -> edit (p:n:[]) ) )
+edit []   = prompt "What property do you want to edit? : " >>= (\p -> prompt "What's the name or id of the Anime you want to edit? : " >>= (\n -> edit (p:n:[]) ) )
 edit args = do
   case length args of
     1 -> prompt "What's the name or id of the Anime you want to edit? : " >>= (\n -> edit (args ++ [n]))
