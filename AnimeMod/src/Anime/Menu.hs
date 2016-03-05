@@ -3,7 +3,6 @@ module Anime.Menu where
 import General
 import Anime.Types
 import Anime.Files
-import System.IO (hFlush, stdout)
 import Control.Applicative ((<$>), (<*>))
 import Data.List (isInfixOf, find)
 import Data.Maybe (fromJust)
@@ -16,42 +15,47 @@ help = do
   putStrLn "This is the unfinished help section :P\n"
   putStrLn "available right now are:"
   putStrLn "help                - showing this text with some information"
+  putStrLn "info                - shows the crunched Data about all Anime"
   putStrLn "show                - shows all Anime in the binary"
-  putStrLn "add                 - prompts the user and then adds the Anime to 'other'"
+  putStrLn "add NAME ID         - prompts the user and then adds the Anime to 'other'"
   putStrLn "edit PROPERTY NAME  - lets the user edit all properties of an Anime"
   putStrLn "sort                - sorts all known Anime"
   putStrLn "del NAME            - not yet implemented"
   putStrLn "\nNAME: name of the Anime, PROPERTY: what element you want to edit, [help] for listing possible ones"
   putStrLn "summary: help, show, add, edit NAME, del NAME"
-
-
--- | small helper function requesting a string
-prompt :: String -> IO String
-prompt text = do
-  putStr text
-  hFlush stdout
-  getLine
+  putStrLn "Note: There is autocompletion, meaning that even with the minumum unique input, \nyou will get the correct result"
 
 -- | creates a new Anime based only on the name
 newAnime :: String -> ID -> Anime
 newAnime name id = Anime id name NoRating Unknown Unknown
 
--- | creating a anime anew completely
-completelyNew :: IO Anime
-completelyNew = do
-  name <- prompt "New Anime: "
+
+-- | creating a Anime anew completely
+completelyNew :: [String] -> IO Anime
+completelyNew []   = do
+  list <- loadList
   high_id <- highestId
-  new_id <- prompt $ "ID [" ++ show (high_id + 1) ++ "] : "
-  isFree ( if length new_id > 0 then read new_id else high_id + 1) >>= return . (newAnime name)
+  name <- prompt "New Anime: "
+  new_id <- prompt $! "ID [" ++ show (high_id + 1) ++ "] : "
+  completelyNew [name, new_id]
+completelyNew args = do
+  list <- loadList
+  high_id <- highestId
+  case length args of
+    1 -> do
+      new_id <- prompt $! "ID [" ++ show (high_id + 1) ++ "] : "
+      completelyNew $! args ++ [new_id]
+    2 -> let 
+          name = args !! 0
+          new_id = args !! 1
+         in isFree' (if length new_id > 0 then read new_id else high_id + 1) >>= return . (newAnime name)
+    n -> case readArgs args of
+          (name, Just id) -> completelyNew [name, show id]
+          (name, Nothing) -> completelyNew [name]
 
--- | if the given id is free, just returns it, if not, returns one that certainly is
-isFree :: ID -> IO ID
-isFree id = do
-  an <- getAnimeWithId id
-  case an of
-    Nothing -> return id
-    Just anim -> (+1) <$> highestId
-
+-- for whatever reason this is sometimes necessary
+addNewAnime :: [String] -> IO ()
+addNewAnime args = completelyNew args >>= addAnime
 
 -- | returns only the selected one if the name got exactly specified, otherwise changes nothing
 isSame :: String -> [Anime] -> [Anime]
@@ -64,13 +68,12 @@ edit []   = prompt "What property do you want to edit? : " >>= (\p -> prompt "Wh
 edit args = do
   case length args of
     1 -> prompt "What's the name or id of the Anime you want to edit? : " >>= (\n -> edit (args ++ [n]))
-    -- | 2 -> selectAnime (args !! 1) >>= (\a -> selectProperty (args !! 0) >>= (\p -> prompt "Please enter the value of the new property: " >>= return . (\v -> editAnime a p v) ) ) >> return ()
     2 -> do
       all <- loadList
       selAn <- selectAnime (args !! 1)
       selPr <- selectProperty (args !! 0)
       new <- prompt "Please enter the value of the new property: "
-      let edi = editAnime selAn selPr $! new
+      let edi = editAnime all selAn selPr $! new
       saveComplete $! modifyInList all (name selAn) edi
     _ -> putStrLn "That were too many arguments. Please Try again." >> edit []
 
@@ -116,14 +119,15 @@ selectProperty p =
 
 
 -- | edits the property of the given Anime and returns it with the new property
-editAnime :: Anime -> String -> String -> Anime
-editAnime (Anime id nam rat ep wa) prop new =
+editAnime :: CompleteCollection -> Anime -> String -> String -> Anime
+editAnime co (Anime id nam rat ep wa) prop new =
   case prop of
     "name" -> (Anime id new rat ep wa)
     "rating" -> (Anime id nam (read $ "Rating " ++ new) ep wa)
-    "epwatched" -> (Anime id nam rat (read $ "Episodes " ++ new) wa)
-    "eptotal" -> (Anime id nam rat ep (read $ "Episodes " ++ new) )
-    "id" -> (Anime (read new) nam rat ep wa)
+    "epwatched" -> (Anime id nam rat (readEpisodes new) wa)
+    "eptotal" -> (Anime id nam rat ep (readEpisodes new) )
+    "id" -> do
+      let newId = isFree (read new) co in (Anime newId nam rat ep wa)
     _ -> error "No Property of an Anime"
 
 
@@ -141,4 +145,11 @@ modifyAnime' []      _  _  = []
 modifyInList :: CompleteCollection -> String -> Anime -> CompleteCollection
 modifyInList (Co wa ne ot) nam an = (Co (mod wa) (mod ne) (mod ot) )
   where mod = (flip . flip modifyAnime) an nam
+
+-- | deletes the given Anime, or asks to select one if none is given
+delAnime :: [String] -> IO ()
+delAnime args =
+  case length args of
+    1 -> selectAnime (args !! 0) >>= deleteAnime
+    _ -> prompt "Please enter the name or id of the Anime you wish to delete. : " >>= selectAnime >>= deleteAnime
 

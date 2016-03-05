@@ -3,7 +3,7 @@ module Anime.Files where
 import General
 import Anime.Types
 import Data.Binary (Binary (..), Get, encodeFile, decodeFile)
-import System.Directory (doesFileExist)
+import System.Directory (doesFileExist, renameFile)
 import Data.List (find, sort, delete)
 import Data.IORef
 import Debug.Trace (trace)
@@ -13,14 +13,29 @@ import Debug.Trace (trace)
 highestId :: IO ID
 highestId = completeList >>= return . (\a -> maximum . map getId $! a)
 
+-- | just returns it if the given id is free, otherwise returns the next free one
+isFree :: ID -> CompleteCollection -> ID
+isFree id co =
+  case getAnimeWithId' id co of
+    Nothing -> id
+    Just anime -> isFree (id + 1) co
+
+isFree' :: ID -> IO ID
+isFree' id = do
+  found <- getAnimeWithId id
+  case found of
+    Nothing    -> return id
+    Just anime -> isFree' (id + 1)
+
 -- | the name of the Binary file including the list of Anime
-fileDir :: String
-fileDir = "anime.bin"
+fileName :: String
+fileName = "anime.bin"
+tempFileName = ".anime.bin"
 
 -- | Saving a list of Anime to the Disk
 saveComplete :: CompleteCollection -> IO ()
 saveComplete c = do
-  encodeFile fileDir $! c
+  encodeFile tempFileName $! c
   putStrLn "Saved"
 
 -- | saves the modified 'watched'-field
@@ -55,9 +70,9 @@ getOther = loadList >>= return . other
 
 -- | Loading a list of Anime from the Disk
 load :: IO CompleteCollection
-load = trace "Loading File ..." $ do
-  exist <- doesFileExist fileDir
-  if exist then decodeFile $! fileDir else saveComplete (Co [] [] [Anime 1 "Test, please edit" NoRating Unknown Unknown]) >> load
+load = do
+  exist <- doesFileExist fileName
+  if exist then decodeFile $! fileName else saveComplete (Co [] [] [Anime 1 "Test, please edit" NoRating Unknown Unknown]) >> load
 
 -- | returns the saved IORef and thus prevents rereading the binary file
 loadList :: IO CompleteCollection
@@ -94,12 +109,17 @@ getAnimeWithId iD = do
   let res = find (\a -> getId a == iD) list
   return res
 
+-- | gets the single Anime with this ID from this Collection, for then there is no IO done
+getAnimeWithId' :: ID -> CompleteCollection -> Maybe Anime
+getAnimeWithId' iD (Co wa ne ot) = do
+  let complete = wa ++ ne ++ ot
+  find (\a -> getId a == iD) complete
 
 -- | adding an Anime to the saved binary
 addAnime :: Anime -> IO ()
 addAnime new = do
-  oth <- (loadList >>= return . other)
-  saveOther $! addToEnd oth new
+  oth <- getOther
+  saveOther $ addToEnd oth new
 
 
 -- | sorting the list of known Anime
@@ -109,10 +129,10 @@ sortAnime = applyToAll sort
 
 -- | deleting the selected Anime
 deleteAnime :: Anime -> IO ()
-deleteAnime anime = applyToAll (delete anime)
+deleteAnime anime = prompt ("Deleting " ++ name anime ++ ". [Enter] : ") >> applyToAll (delete anime)
 
 
-  -- | applies the given function to all three lists of Anime
+-- | applies the given function to all three lists of Anime
 applyToAll :: (AllAnime -> AllAnime) -> IO ()
 applyToAll f = loadList >>= saveComplete . putInside f
 
@@ -120,14 +140,27 @@ applyToAll f = loadList >>= saveComplete . putInside f
 putInside :: (AllAnime -> AllAnime) -> CompleteCollection -> CompleteCollection
 putInside f (Co wa ne ot) = Co (f wa) (f ne) (f ot)
 
--- acually sorting them in the right category
+-- | actually sorting them in the right category
 sortAllAnime :: IO ()
-sortAllAnime = completeList >>= saveComplete . (foldl sortToRightCategory (Co [] [] []) )
+sortAllAnime = completeList >>= saveComplete . (foldl sortToRightCategory (Co [] [] []) ) >> sortAnime
 
--- sorting one Anime in the Right category
+-- | sorting one Anime in the Right category
 sortToRightCategory :: CompleteCollection -> Anime -> CompleteCollection
 sortToRightCategory (Co wa ne ot) a@(Anime _ _ NoRating   Unknown   Unknown   ) = Co wa ne (addToEnd ot a)
 sortToRightCategory (Co wa ne ot) a@(Anime _ _ NoRating   w       (Episodes t)) =
   if w == (Episodes t) then Co (addToEnd wa a) ne ot else Co wa (addToEnd ne a) ot
 sortToRightCategory (Co wa ne ot) a@(Anime _ _   _        _         _         ) = Co (addToEnd wa a) ne ot
 
+-- | reading the arguments, and turning it in a tuple of the whole name and the maybe ID
+readArgs :: [String] -> (String, Maybe ID)
+readArgs [] = ("", Nothing)
+readArgs li =
+  case maybeRead (last li) :: Maybe ID of
+    Just id -> (unwords $ init li, Just id)
+    Nothing -> (unwords li, Nothing)
+
+
+resetFiles :: IO ()
+resetFiles = do
+  exist <- doesFileExist tempFileName
+  if exist then renameFile tempFileName fileName else return ()

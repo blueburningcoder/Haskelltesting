@@ -5,7 +5,7 @@ import Data.Binary (Binary (..), Get, encodeFile, decodeFile)
 import Debug.Trace (trace)
 
 {-
--- All kinda genres that an anime might or might not have
+-- | All kinda genres that an anime might or might not have
 data Genres = Action | Adventure | Comedy | Crime | Fantasy | Fiction | Historical | Horror | Magical 
     | Mystery | Paranoid | Philosophical | Political | Romance | Saga | Satire | ScienceFiction 
     | SliceOfLife | Speculative | Thriller | Urban | Western
@@ -17,7 +17,7 @@ instance Binary Genres where
   get = do gen <- get
     return $ read gen
 
--- A Rating usually consists of a list of genres and a list of their individual scores, 1-10 respectively
+-- | A Rating usually consists of a list of genres and a list of their individual scores, 1-10 respectively
 data Rating = None | Rating [Genres] [Int] Double
   deriving (Read, Eq)
 
@@ -38,13 +38,13 @@ instance Binary Rating where
             ov  <- get
             return (Rating gen rat ov)
 
--- currnetly only showing the overall Rating if necessary
+-- | currently only showing the overall Rating if necessary
 instance Show Rating where
   show None = "•not available•"
   show (Rating _ _ o) = show o
 -}
 
--- a Rating is either nothing or some double value
+-- | a Rating is either nothing or some double value
 data Rating = NoRating | Rating Double
   deriving (Read, Show, Eq, Ord)
 
@@ -58,7 +58,7 @@ instance Binary Rating where
             0 -> return NoRating
             1 -> do r <- get; return (Rating r)
 
--- The number of Episodes is either Unknown, Zero (yet), or some Int
+-- | The number of Episodes is either Unknown, Zero (yet), or some Int
 data Episodes = Unknown | Zero | Episodes Int
   deriving (Read, Eq, Ord)
 
@@ -66,6 +66,13 @@ instance Show Episodes where
   show Unknown    = "Unknown"
   show Zero       = "Zero"
   show (Episodes num) = show num
+
+-- | reads the String and turns it into an Episode
+readEpisodes :: String -> Episodes
+readEpisodes "Unknown" = Unknown
+readEpisodes "Zero"    = Zero
+readEpisodes "0"       = Zero
+readEpisodes str       = read $ "Episodes " ++ str
 
 instance Binary Episodes where
   put Unknown     = put (-1 :: Int)
@@ -81,7 +88,7 @@ instance Binary Episodes where
 type ID = Int
 type Name = String
 
--- an anime usually consists of the name, the rating, the episodes and the episodes watched
+-- | an anime usually consists of the name, the rating, the episodes and the episodes watched
 data Anime = Anime { getId :: ID, name :: Name, rating :: Rating, watchedEp :: Episodes, totalEp ::  Episodes }
 
 instance Eq Anime where
@@ -115,6 +122,7 @@ type WatchedAnime = AllAnime
 type NextAnime  = AllAnime
 type OtherAnime   = AllAnime
 
+-- | the complete Collection of Anime including those watched, those who are going to be watched next and the others, from which only the name might be known.
 data CompleteCollection = Co { watched :: WatchedAnime, next :: NextAnime, other :: OtherAnime }
   deriving (Eq)
 

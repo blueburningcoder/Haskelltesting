@@ -6,7 +6,6 @@ import Anime.Files
 import Anime.Menu
 import System.Environment (getArgs, withArgs)
 
-
 -- the main function
 main = do
   loadList
@@ -14,12 +13,14 @@ main = do
   if length args < 1 then putStrLn "Please type an argument too ... [EXEC help]" >> help else do
     case head args of
       "show" -> showAnimeList
-      "add"  -> completelyNew >>= addAnime
-      "del"  -> selectAnime "Please enter the name or id of the Anime you wish to delete. : " >>= deleteAnime
-      "edit" -> edit $ tail args
+      "add"  -> addNewAnime $ tail args
+      "del"  -> delAnime    $ tail args
+      "edit" -> edit        $ tail args
       "help" -> help
-      "sort" -> prompt "Please Note that this might take some time. \nDo you wish to continue? " >> sortAllAnime -- for some mysterious reason this won't work otherwise.
+      "sort" -> sortAllAnime
+      "info" -> prompt "Please note that this might take some time. \nDo you wish to continue? " >> undefined
       _ -> putStrLn "This feature is not yet implemented ._."
+  resetFiles
 
 
 
