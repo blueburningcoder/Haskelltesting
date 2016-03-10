@@ -14,16 +14,18 @@ help :: IO ()
 help = do 
   putStrLn "This is the unfinished help section :P\n"
   putStrLn "available right now are:"
-  putStrLn "help                - showing this text with some information"
-  putStrLn "info                - shows the crunched Data about all Anime"
-  putStrLn "show                - shows all Anime in the binary"
-  putStrLn "add NAME ID         - prompts the user and then adds the Anime to 'other'"
-  putStrLn "edit PROPERTY NAME  - lets the user edit all properties of an Anime"
-  putStrLn "sort                - sorts all known Anime"
-  putStrLn "del NAME            - not yet implemented"
-  putStrLn "\nNAME: name of the Anime, PROPERTY: what element you want to edit, [help] for listing possible ones"
-  putStrLn "summary: help, show, add, edit NAME, del NAME"
-  putStrLn "Note: There is autocompletion, meaning that even with the minumum unique input, \nyou will get the correct result"
+  putStrLn "help                            - showing this text with some information"
+  putStrLn "show [-human]                   - shows all Anime in the binary, '-human': might be more 'human' readable"
+  putStrLn "add  [NAME] [ID]                - prompts the user and then adds the Anime to 'other'"
+  putStrLn "edit [PROPERTY] [NAME/ID] [NEW] - lets the user edit all properties of an Anime"
+  putStrLn "seen [NUM/next/all] [NAME/ID]   - adds the number [of episodes seen] to the specified Anime"
+  putStrLn "del  [NAME/ID]                  - deletes the uniquely identifyable Anime"
+  putStrLn "sort [-order]                   - sorts all known Anime, '-order': ordering the id's"
+  putStrLn "info                            - shows the crunched Data about all Anime"
+  putStrLn "\nsummary: help, show, add, edit, seen, del, sort, info"
+  putStrLn "arguments can be put behind the command itself, and will be requested if required."
+  putStrLn "Note: There is autocompletion, meaning that even with the minumum unique input,"
+  putStrLn "you will get the correct result (commands excluded)."
 
 -- | creates a new Anime based only on the name
 newAnime :: String -> ID -> Anime
@@ -64,16 +66,16 @@ isSame n li = if elem n $ map name li then return . fromJust . find (\a -> name 
 
 -- | editing the information about an Anime
 edit :: [String] -> IO ()
-edit []   = prompt "What property do you want to edit? : " >>= (\p -> prompt "What's the name or id of the Anime you want to edit? : " >>= (\n -> edit (p:n:[]) ) )
+edit []   = prompt "What property do you want to edit? : " >>= selectProperty >>= (\p -> edit [p])
 edit args = do
   case length args of
-    1 -> prompt "What's the name or id of the Anime you want to edit? : " >>= (\n -> edit (args ++ [n]))
-    2 -> do
+    1 -> prompt "What's the name or id of the Anime you want to edit? : " >>= selectAnime >>= (\n -> edit $ args ++ [show $ getId n])
+    2 -> prompt "Please enter the value of the new property: " >>= (\new -> edit $ args ++ [new])
+    3 -> do
       all <- loadList
-      selAn <- selectAnime (args !! 1)
       selPr <- selectProperty (args !! 0)
-      new <- prompt "Please enter the value of the new property: "
-      let edi = editAnime all selAn selPr $! new
+      selAn <- selectAnime (args !! 1)
+      let new = args !! 2; edi = editAnime all selAn selPr $! new
       saveComplete $! modifyInList all (name selAn) edi
     _ -> putStrLn "That were too many arguments. Please Try again." >> edit []
 
@@ -146,10 +148,31 @@ modifyInList :: CompleteCollection -> String -> Anime -> CompleteCollection
 modifyInList (Co wa ne ot) nam an = (Co (mod wa) (mod ne) (mod ot) )
   where mod = (flip . flip modifyAnime) an nam
 
+modifyInList' :: CompleteCollection -> ID -> Anime -> CompleteCollection
+modifyInList' (Co wa ne ot) id an = (Co (mod wa) (mod ne) (mod ot) )
+  where mod = (flip . flip modifyAnime') an id
+
 -- | deletes the given Anime, or asks to select one if none is given
 delAnime :: [String] -> IO ()
 delAnime args =
   case length args of
     1 -> selectAnime (args !! 0) >>= deleteAnime
     _ -> prompt "Please enter the name or id of the Anime you wish to delete. : " >>= selectAnime >>= deleteAnime
+
+-- fast helper for editing
+seen :: [String] -> IO ()
+seen []   = prompt "How many Episodes is the new count? : " >>= (\u -> seen [u])
+seen args =
+  case length args of
+    1 -> prompt "Please enter the name or id of the Anime you wish to update. : " >>= selectAnime >>= (\a -> seen $ args ++ [show $ getId a])
+    2 -> let animF = determineNum $ args !! 0 in do
+        anime <- selectAnime $ args !! 1
+        loadList >>= saveComplete . (\li -> modifyInList' li (getId anime) (animF anime) )
+    n -> seen [head args, fst . readArgs . tail $ args]
+
+determineNum :: String -> (Anime -> Anime)
+determineNum "next" = (\ (Anime id nam rat epwa epto) -> Anime id nam rat (succ epwa)        epto)
+determineNum "all"  = (\ (Anime id nam rat epwa epto) -> Anime id nam rat epto               epto)
+determineNum str    = (\ (Anime id nam rat epwa epto) -> Anime id nam rat (readEpisodes str) epto)
+
 

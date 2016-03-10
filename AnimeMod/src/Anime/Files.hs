@@ -4,7 +4,7 @@ import General
 import Anime.Types
 import Data.Binary (Binary (..), Get, encodeFile, decodeFile)
 import System.Directory (doesFileExist, renameFile)
-import Data.List (find, sort, delete)
+import Data.List (find, sort, delete, isInfixOf)
 import Data.IORef
 import Debug.Trace (trace)
 
@@ -72,7 +72,7 @@ getOther = loadList >>= return . other
 load :: IO CompleteCollection
 load = do
   exist <- doesFileExist fileName
-  if exist then decodeFile $! fileName else saveComplete (Co [] [] [Anime 1 "Test, please edit" NoRating Unknown Unknown]) >> load
+  if exist then decodeFile $! fileName else saveComplete (Co [] [] [Anime 1 "Test, please edit" NoRating Unknown Unknown]) >> resetFiles >> load
 
 -- | returns the saved IORef and thus prevents rereading the binary file
 loadList :: IO CompleteCollection
@@ -90,9 +90,13 @@ completeList :: IO AllAnime
 completeList = loadList >>= return . (\co -> watched co ++ next co ++ other co)
 
 -- | showing the List of Anime
-showAnimeList :: IO ()
-showAnimeList = loadList >>= print
-
+showAnimeList :: [String] -> IO ()
+showAnimeList args =
+  case length args of
+    0 -> loadList >>= print
+    _ -> case isInfixOf (args !! 0) "-human" of
+          True  -> loadList >>= putStrLn . listReadable
+          False -> showAnimeList []
 
 -- | gets the single Anime with this Name
 getAnimeWithName :: String -> IO (Maybe Anime)
@@ -141,8 +145,13 @@ putInside :: (AllAnime -> AllAnime) -> CompleteCollection -> CompleteCollection
 putInside f (Co wa ne ot) = Co (f wa) (f ne) (f ot)
 
 -- | actually sorting them in the right category
-sortAllAnime :: IO ()
-sortAllAnime = completeList >>= saveComplete . (foldl sortToRightCategory (Co [] [] []) ) >> sortAnime
+sortAllAnime :: [String] -> IO ()
+sortAllAnime args =
+  case length args of
+    0 -> completeList >>= saveComplete . (foldl sortToRightCategory (Co [] [] []) )
+    _ -> case isInfixOf (args !! 0) "-order" of
+          True  -> sortAnime
+          False -> sortAllAnime []
 
 -- | sorting one Anime in the Right category
 sortToRightCategory :: CompleteCollection -> Anime -> CompleteCollection
@@ -159,7 +168,7 @@ readArgs li =
     Just id -> (unwords $ init li, Just id)
     Nothing -> (unwords li, Nothing)
 
-
+-- | renames the newly written file if existent
 resetFiles :: IO ()
 resetFiles = do
   exist <- doesFileExist tempFileName

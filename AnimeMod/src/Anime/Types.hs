@@ -1,6 +1,6 @@
 module Anime.Types where
 
-
+import General
 import Data.Binary (Binary (..), Get, encodeFile, decodeFile)
 import Debug.Trace (trace)
 
@@ -46,7 +46,11 @@ instance Show Rating where
 
 -- | a Rating is either nothing or some double value
 data Rating = NoRating | Rating Double
-  deriving (Read, Show, Eq, Ord)
+  deriving (Read, Eq, Ord)
+
+instance Show Rating where
+  show NoRating     = " . "
+  show (Rating rat) = show rat
 
 instance Binary Rating where
   put NoRating = do put (0 :: Int)
@@ -62,9 +66,22 @@ instance Binary Rating where
 data Episodes = Unknown | Zero | Episodes Int
   deriving (Read, Eq, Ord)
 
+instance Enum Episodes where
+  succ Unknown      = Zero
+  succ Zero         = Episodes 1
+  succ (Episodes n) = Episodes $ n + 1
+  pred Unknown      = Unknown
+  pred Zero         = Zero
+  pred (Episodes 1) = Zero
+  pred (Episodes n) = Episodes $ n - 1
+  toEnum num        = pred . succ $ Episodes num
+  fromEnum Zero     = 0
+  fromEnum Unknown  = undefined
+  fromEnum (Episodes n) = n
+
 instance Show Episodes where
-  show Unknown    = "Unknown"
-  show Zero       = "Zero"
+  show Unknown        = "Unknown"
+  show Zero           = "Zero"
   show (Episodes num) = show num
 
 -- | reads the String and turns it into an Episode
@@ -72,12 +89,15 @@ readEpisodes :: String -> Episodes
 readEpisodes "Unknown" = Unknown
 readEpisodes "Zero"    = Zero
 readEpisodes "0"       = Zero
-readEpisodes str       = read $ "Episodes " ++ str
+readEpisodes str       = case maybeRead $ "Episodes " ++ str of
+  Just ep -> ep
+  Nothing -> Unknown
+
 
 instance Binary Episodes where
-  put Unknown     = put (-1 :: Int)
-  put Zero      = put (0 :: Int)
-  put (Episodes num)  = put (1 :: Int) >> put num
+  put Unknown        = put (-1 :: Int)
+  put Zero           = put  (0 :: Int)
+  put (Episodes num) = put  (1 :: Int) >> put num
 
   get = do t <- get :: Get Int
            case t of
@@ -85,11 +105,11 @@ instance Binary Episodes where
             0 -> return Zero
             1 -> do num <- get; return (Episodes num)
 
-type ID = Int
+type ID   = Int
 type Name = String
 
 -- | an anime usually consists of the name, the rating, the episodes and the episodes watched
-data Anime = Anime { getId :: ID, name :: Name, rating :: Rating, watchedEp :: Episodes, totalEp ::  Episodes }
+data Anime = Anime { getId :: ID, name :: Name, rating :: Rating, watchedEp :: Episodes, totalEp :: Episodes }
 
 instance Eq Anime where
   (Anime id _ _ _ _) == (Anime iD _ _ _ _) = id == iD
@@ -105,21 +125,24 @@ instance Binary Anime where
     put ep
     put wa
   get = do
-    id <- get
+    id  <- get
     nam <- get
     rat <- get
-    ep <- get
-    wa <- get
+    ep  <- get
+    wa  <- get
     return $ Anime id nam rat ep wa
 
 instance Show Anime where
-  show (Anime id name rat wa ep) = "Anime with id " ++ show id ++ " is " ++ show name ++ " with " ++ show rat ++ " and " ++ show wa ++ "/" ++ show ep ++ " seen.\n"
- 
+  show (Anime id name rat wa ep) = "Anime with id " ++ show id ++ " is " ++ show name ++ " with Rating " ++ show rat ++ " and " ++ show wa ++ "/" ++ show ep ++ " seen.\n"
+
+listAnime :: Anime -> String
+listAnime (Anime id name rat waep toep) = begin ++ (concat . take (125 - length begin) . repeat $ " ") ++ " - (" ++ show rat ++ ")"
+  where begin = name ++ "; (" ++ show waep ++ "/" ++ show toep ++ ")"
 
 type AllAnime = [Anime]
 
 type WatchedAnime = AllAnime
-type NextAnime  = AllAnime
+type NextAnime    = AllAnime
 type OtherAnime   = AllAnime
 
 -- | the complete Collection of Anime including those watched, those who are going to be watched next and the others, from which only the name might be known.
@@ -128,6 +151,10 @@ data CompleteCollection = Co { watched :: WatchedAnime, next :: NextAnime, other
 
 instance Show CompleteCollection where
   show (Co wa ne ot) = "---- ---- Watched:\n" ++ show wa ++ "\n\n---- ---- Next:\n" ++ show ne ++ "\n\n---- ---- Other known ones:\n" ++ show ot
+
+-- putting all Anime in a Human-readable form
+listReadable :: CompleteCollection -> String
+listReadable (Co wa ne ot) = unlines . map listAnime $ (wa ++ ne ++ ot)
 
 instance Binary CompleteCollection where
   put (Co wa ne ot) = do put wa; put ne; put ot
