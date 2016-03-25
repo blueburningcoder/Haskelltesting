@@ -7,24 +7,29 @@ import Cube
 import Points
 
 
-display :: IORef GLfloat -> DisplayCallback
-display angle = do
-  clear [ColorBuffer]
+display :: IORef GLfloat -> IORef (GLfloat, GLfloat) -> DisplayCallback
+display angle pos = do
+  clear [ColorBuffer, DepthBuffer]
   loadIdentity
-  a <- get angle
-  rotate a $ Vector3 0 0 1
-  scale 0.8 0.8 (0.8 :: GLfloat)
-  forM_ (points 7) $ \(x,y,z) ->
-    preservingMatrix $ do
+  (x', y') <- get pos
+  translate $ Vector3 x' y' 0
+  preservingMatrix $ do
+    a <- get angle
+    rotate a $ Vector3 0 0.1 1
+    scale 0.7 0.7 (0.7 :: GLfloat)
+    forM_ (points 7) $ \(x,y,z) -> preservingMatrix $ do
       color $ Color3 ((x+1)/2) ((y+1)/2) ((z+1)/2)
       translate $ Vector3 x y z
       cube 0.1
-  flush
+      color $ Color3 0 0 (0 :: GLfloat)
+      cubeFrame 0.1
+  swapBuffers
 
 
-idle :: IORef GLfloat -> IdleCallback
-idle angle = do
-  angle $~! (+ 0.1)
+idle :: IORef GLfloat -> IORef GLfloat -> IdleCallback
+idle angle delta = do
+  d <- get delta
+  angle $~! (+ d)
   postRedisplay Nothing
 
 

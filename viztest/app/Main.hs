@@ -9,13 +9,16 @@ import Data.IORef
 main :: IO ()
 main = do
   (_progName, _args) <- getArgsAndInitialize
-  initialDisplayMode $= [DoubleBuffered]
+  initialDisplayMode $= [WithDepthBuffer, DoubleBuffered]
   _window <- createWindow "Hello World"
   reshapeCallback $= Just reshape
-  keyboardMouseCallback $= Just keyboardMouse
+  depthFunc $= Just Less
   angle <- newIORef 0.0
-  displayCallback $= display angle
-  idleCallback $= Just (idle angle)
+  delta <- newIORef 0.1
+  pos   <- newIORef (0,0)
+  keyboardMouseCallback $= Just (keyboardMouse delta pos)
+  idleCallback $= Just (idle angle delta)
+  displayCallback $= display angle pos
   mainLoop
 
 
