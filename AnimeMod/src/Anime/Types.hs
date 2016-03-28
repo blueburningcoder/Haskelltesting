@@ -2,7 +2,11 @@ module Anime.Types where
 
 import General
 import Data.Binary (Binary (..), Get, encodeFile, decodeFile)
+import Data.Maybe (fromJust)
+import Data.List (find)
 import Debug.Trace (trace)
+
+import qualified Data.Vector as V
 
 {-
 -- | All kinda genres that an anime might or might not have
@@ -49,7 +53,7 @@ data Rating = NoRating | Rating Double
   deriving (Read, Eq, Ord)
 
 instance Show Rating where
-  show NoRating     = " . "
+  show NoRating     = "_._"
   show (Rating rat) = show rat
 
 instance Binary Rating where
@@ -71,7 +75,7 @@ instance Enum Episodes where
   succ Zero         = Episodes 1
   succ (Episodes n) = Episodes $ n + 1
   pred Unknown      = Unknown
-  pred Zero         = Zero
+  pred Zero         = Unknown
   pred (Episodes 1) = Zero
   pred (Episodes n) = Episodes $ n - 1
   toEnum num        = pred . succ $ Episodes num
@@ -136,8 +140,12 @@ instance Show Anime where
   show (Anime id name rat wa ep) = "Anime with id " ++ show id ++ " is " ++ show name ++ " with Rating " ++ show rat ++ " and " ++ show wa ++ "/" ++ show ep ++ " seen.\n"
 
 listAnime :: Anime -> String
-listAnime (Anime id name rat waep toep) = begin ++ (concat . take (125 - length begin) . repeat $ " ") ++ " - (" ++ show rat ++ ")"
+listAnime (Anime id name rat waep toep) = begin ++ (concat . take (100 - length begin) . repeat $ " ") ++ " - (" ++ show rat ++ ")"
   where begin = name ++ "; (" ++ show waep ++ "/" ++ show toep ++ ")"
+
+-- | returns only the selected one if the name got exactly specified, otherwise changes nothing
+isSame :: String -> [Anime] -> [Anime]
+isSame n li = if elem n $ map name li then return . fromJust . find (\a -> name a == n) $ li else li
 
 type AllAnime = [Anime]
 

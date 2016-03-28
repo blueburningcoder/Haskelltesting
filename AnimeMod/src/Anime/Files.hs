@@ -13,7 +13,7 @@ import Debug.Trace (trace)
 highestId :: IO ID
 highestId = completeList >>= return . (\a -> maximum . map getId $! a)
 
--- | just returns it if the given id is free, otherwise returns the next free one
+-- | just returns it if the given id is free, otherwise returns the next free id
 isFree :: ID -> CompleteCollection -> ID
 isFree id co =
   case getAnimeWithId' id co of
@@ -72,7 +72,7 @@ getOther = loadList >>= return . other
 load :: IO CompleteCollection
 load = do
   exist <- doesFileExist fileName
-  if exist then decodeFile $! fileName else saveComplete (Co [] [] [Anime 1 "Test, please edit" NoRating Unknown Unknown]) >> resetFiles >> load
+  if exist then decodeFile $! fileName else saveComplete (Co [] [] []) >> resetFiles >> load
 
 -- | returns the saved IORef and thus prevents rereading the binary file
 loadList :: IO CompleteCollection
@@ -96,7 +96,8 @@ showAnimeList args =
     0 -> loadList >>= print
     _ -> case isInfixOf (args !! 0) "-human" of
           True  -> loadList >>= putStrLn . listReadable
-          False -> showAnimeList []
+          False -> selectAnime (unwords args) >>= putStrLn . listAnime
+
 
 -- | gets the single Anime with this Name
 getAnimeWithName :: String -> IO (Maybe Anime)
@@ -112,6 +113,30 @@ getAnimeWithId iD = do
   list <- completeList
   let res = find (\a -> getId a == iD) list
   return res
+
+-- | seletcing an Anime based on the name
+selectAnime :: String -> IO Anime
+selectAnime ""  = prompt "Please enter at least something aout the Anime. : " >>= selectAnime
+selectAnime nam = do
+  list <- completeList
+  let closest = isSame nam $ getClosest list 5 (\a -> isInfixOf nam (name a) )
+  let names   = [(getId a, name a) | a <- closest]
+  case length closest of
+    0 -> testForId nam
+    1 -> return $ closest !! 0
+    n -> prompt ("Several found. Please specify name or id. " ++ show names ++ " : ") >>= selectAnime
+
+-- | checking if it actually was an id, otherwise just prompting selectAnime again
+testForId :: String -> IO Anime
+testForId str =
+  let might   = maybeRead str :: Maybe ID in
+  case might of
+    Nothing    -> prompt "Not found. Search for: " >>= selectAnime
+    (Just sth) -> do
+      an <- getAnimeWithId sth
+      case an of
+        Nothing      -> prompt "No Anime with this Name or id. Try again. : " >>= selectAnime
+        (Just anime) -> return anime
 
 -- | gets the single Anime with this ID from this Collection, for then there is no IO done
 getAnimeWithId' :: ID -> CompleteCollection -> Maybe Anime
@@ -155,9 +180,10 @@ sortAllAnime args =
 
 -- | sorting one Anime in the Right category
 sortToRightCategory :: CompleteCollection -> Anime -> CompleteCollection
-sortToRightCategory (Co wa ne ot) a@(Anime _ _ NoRating   Unknown   Unknown   ) = Co wa ne (addToEnd ot a)
-sortToRightCategory (Co wa ne ot) a@(Anime _ _ NoRating   w       (Episodes t)) =
-  if w == (Episodes t) then Co (addToEnd wa a) ne ot else Co wa (addToEnd ne a) ot
+sortToRightCategory  co           a@(Anime _ "" NoRating  Unknown Unknown   ) = co
+sortToRightCategory (Co wa ne ot) a@(Anime _ _  NoRating  Unknown Unknown   ) = Co wa ne (addToEnd ot a)
+sortToRightCategory (Co wa ne ot) a@(Anime _ _  NoRating  w       uw        ) =
+  if w == uw && w /= Unknown then Co (addToEnd wa a) ne ot else Co wa (addToEnd ne a) ot
 sortToRightCategory (Co wa ne ot) a@(Anime _ _   _        _         _         ) = Co (addToEnd wa a) ne ot
 
 -- | reading the arguments, and turning it in a tuple of the whole name and the maybe ID

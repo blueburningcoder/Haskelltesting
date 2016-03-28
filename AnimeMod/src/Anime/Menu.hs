@@ -4,8 +4,7 @@ import General
 import Anime.Types
 import Anime.Files
 import Control.Applicative ((<$>), (<*>))
-import Data.List (isInfixOf, find)
-import Data.Maybe (fromJust)
+import Data.List (isInfixOf)
 import Text.Read (readMaybe)
 
 
@@ -59,10 +58,6 @@ completelyNew args = do
 addNewAnime :: [String] -> IO ()
 addNewAnime args = completelyNew args >>= addAnime
 
--- | returns only the selected one if the name got exactly specified, otherwise changes nothing
-isSame :: String -> [Anime] -> [Anime]
-isSame n li = if elem n $ map name li then return . fromJust . find (\a -> name a == n) $ li else li
-
 
 -- | editing the information about an Anime
 edit :: [String] -> IO ()
@@ -78,32 +73,6 @@ edit args = do
       let new = args !! 2; edi = editAnime all selAn selPr $! new
       saveComplete $! modifyInList all (name selAn) edi
     _ -> putStrLn "That were too many arguments. Please Try again." >> edit []
-
--- | selecting an Anime
-selectAnime :: String -> IO Anime
-selectAnime ""  = prompt "Plese enter at least something about the Anime. : " >>= selectAnime
-selectAnime nam = do
-  list <- completeList
-  let closest = isSame nam $ getClosest list 5 (\a -> isInfixOf nam (name a) )
-  let names   = [(getId a, name a) | a <- closest]
-  case length closest of
-    0 -> testForId nam
-    1 -> return $! closest !! 0
-    n -> do prompt ("Several found. Please specify name or id. " ++ show names ++ " : ") >>= selectAnime
-
-
--- | checking if it actually was an id, otherwise just prompting selectAnime again
-testForId :: String -> IO Anime
-testForId str =
-  let might   = readMaybe str :: Maybe ID in
-  case might of
-    Nothing    -> prompt "Not found. Search for: " >>= selectAnime
-    (Just sth) -> do
-      an <- getAnimeWithId sth
-      case an of
-        Nothing      -> prompt "Not found. Search for: " >>= selectAnime
-        (Just anime) -> return anime
-
 
 -- | all selectable properties
 properties :: [String]
