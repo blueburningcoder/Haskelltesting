@@ -1,12 +1,16 @@
-module Anime.Types where
+module Anime.Types.Old where
 
-import General
-import Data.Binary (Binary (..), Get, encodeFile, decodeFile)
-import Data.Maybe (fromJust)
-import Data.List (find)
-import Debug.Trace (trace)
+import           General
+import           Data.Binary  (Binary (..), Get, encodeFile, decodeFile)
+import           Data.Maybe   (fromJust)
+import           Data.List    (find)
+import           Debug.Trace  (trace)
 
-import qualified Data.Vector as V
+-- Planned:
+--  import           Data.Vector
+--  import           Data.Text
+-- but requires bigger changes throughout several files (28 functions total at this point)
+
 
 {-
 -- | All kinda genres that an anime might or might not have
@@ -144,8 +148,8 @@ listAnime (Anime id name rat waep toep) = begin ++ (concat . take (100 - length 
   where begin = name ++ "; (" ++ show waep ++ "/" ++ show toep ++ ")"
 
 -- | returns only the selected one if the name got exactly specified, otherwise changes nothing
-isSame :: String -> [Anime] -> [Anime]
-isSame n li = if elem n $ map name li then return . fromJust . find (\a -> name a == n) $ li else li
+isSameAnime :: String -> [Anime] -> [Anime]
+isSameAnime n li = isSame' n name li
 
 type AllAnime = [Anime]
 

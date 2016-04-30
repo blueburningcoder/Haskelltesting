@@ -1,8 +1,9 @@
 module Anime.Menu where
 
 import General
-import Anime.Types
+import Anime.Types.Old
 import Anime.Files
+
 import Control.Applicative ((<$>), (<*>))
 import Data.List (isInfixOf)
 import Text.Read (readMaybe)

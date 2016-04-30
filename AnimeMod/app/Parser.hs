@@ -1,6 +1,6 @@
 module Main where
 
-import Anime.Types
+import Anime.Types.Old
 import Anime.Files
 import Anime.Menu
 

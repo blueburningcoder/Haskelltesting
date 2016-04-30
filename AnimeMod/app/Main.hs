@@ -1,9 +1,10 @@
 module Main where
 
 import General
-import Anime.Types
+import Anime.Types.Old
 import Anime.Files
 import Anime.Menu
+import Anime.Stats
 import System.Environment (getArgs, withArgs)
 
 -- the main function
@@ -19,7 +20,7 @@ main = do
       "seen" -> seen          $ tail args
       "sort" -> sortAllAnime  $ tail args
       "help" -> help
-      "info" -> prompt "Please note that this might take some time. \nDo you wish to continue? " >> undefined
+      "info" -> prompt "Please note that this might take some time. \nDo you wish to continue? " >> info
       _ -> putStrLn "This feature is not yet implemented ._."
   resetFiles
 

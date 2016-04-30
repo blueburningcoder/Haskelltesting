@@ -1,7 +1,8 @@
 module Anime.Files where
 
 import General
-import Anime.Types
+import Anime.Types.Old
+
 import Data.Binary (Binary (..), Get, encodeFile, decodeFile)
 import System.Directory (doesFileExist, renameFile)
 import Data.List (find, sort, delete, isInfixOf)
@@ -119,7 +120,7 @@ selectAnime :: String -> IO Anime
 selectAnime ""  = prompt "Please enter at least something aout the Anime. : " >>= selectAnime
 selectAnime nam = do
   list <- completeList
-  let closest = isSame nam $ getClosest list 5 (\a -> isInfixOf nam (name a) )
+  let closest = isSameAnime nam $ getClosest list 5 (\a -> isInfixOf nam (name a) )
   let names   = [(getId a, name a) | a <- closest]
   case length closest of
     0 -> testForId nam
