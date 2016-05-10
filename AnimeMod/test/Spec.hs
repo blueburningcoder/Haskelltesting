@@ -1,7 +1,7 @@
 
-import Anime.Types
-import Anime.Files
-import Anime.Menu
+import Anime.Types.Old
+import Anime.Files.Old
+import Anime.Menu.Old
 
 
 main :: IO ()

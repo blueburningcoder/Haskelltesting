@@ -1,8 +1,8 @@
 module Main where
 
 import Anime.Types.Old
-import Anime.Files
-import Anime.Menu
+import Anime.Files.Old
+import Anime.Menu.Old
 
 import System.Environment
 

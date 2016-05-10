@@ -17,19 +17,24 @@ library
   hs-source-dirs:      src
   exposed-modules:     Anime.Types.Old
                      , Anime.Types.New
-                     , Anime.Files
-                     , Anime.Menu
                      , Anime.Stats
+                     , Anime.Files.Old
+                     , Anime.Files.New
+                     , Anime.Menu.Old
+                     , Anime.Menu.New
                      , General
   build-depends:       base == 4.*
                      , binary
                      , directory
+                     , vector
+                     , vector-binary-instances
+                     , text
   default-language:    Haskell2010
 
 executable AnimeMod
   hs-source-dirs:      app
   main-is:             Main.hs
-  ghc-options:         -threaded -rtsopts -with-rtsopts=-N
+  ghc-options:         -threaded -rtsopts -with-rtsopts=-N -Wall -fwarn-tabs -fwarn-implicit-prelude
   build-depends:       base
                      , AnimeMod
                      , binary

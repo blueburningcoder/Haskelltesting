@@ -1,6 +1,10 @@
+-- | The Old types, which turned out to be inefficient sr not as good as they were supposed to be
+
 module Anime.Types.Old where
 
+import           Prelude
 import           General
+
 import           Data.Binary  (Binary (..), Get, encodeFile, decodeFile)
 import           Data.Maybe   (fromJust)
 import           Data.List    (find)
@@ -67,8 +71,8 @@ instance Binary Rating where
        put r
   get = do t <- get :: Get Int
            case t of
-            0 -> return NoRating
             1 -> do r <- get; return (Rating r)
+            _ -> return NoRating
 
 -- | The number of Episodes is either Unknown, Zero (yet), or some Int
 data Episodes = Unknown | Zero | Episodes Int
@@ -109,14 +113,16 @@ instance Binary Episodes where
 
   get = do t <- get :: Get Int
            case t of
-            (-1) -> return Unknown
             0 -> return Zero
             1 -> do num <- get; return (Episodes num)
+            _ -> return Unknown
 
+-- | Every ID is an Int
 type ID   = Int
+-- | Every Name is a String
 type Name = String
 
--- | an anime usually consists of the name, the rating, the episodes and the episodes watched
+-- | An anime usually consists of the name, the rating, the episodes and the episodes watched
 data Anime = Anime { getId :: ID, name :: Name, rating :: Rating, watchedEp :: Episodes, totalEp :: Episodes }
 
 instance Eq Anime where
@@ -143,28 +149,32 @@ instance Binary Anime where
 instance Show Anime where
   show (Anime id name rat wa ep) = "Anime with id " ++ show id ++ " is " ++ show name ++ " with Rating " ++ show rat ++ " and " ++ show wa ++ "/" ++ show ep ++ " seen.\n"
 
+-- | Presenting the Anime in a sligthly more readable way than the show instance does
 listAnime :: Anime -> String
 listAnime (Anime id name rat waep toep) = begin ++ (concat . take (100 - length begin) . repeat $ " ") ++ " - (" ++ show rat ++ ")"
   where begin = name ++ "; (" ++ show waep ++ "/" ++ show toep ++ ")"
 
--- | returns only the selected one if the name got exactly specified, otherwise changes nothing
+-- | Returns only the selected one if the name got exactly specified, otherwise changes nothing
 isSameAnime :: String -> [Anime] -> [Anime]
 isSameAnime n li = isSame' n name li
 
+-- | AllAnime is just a list of Anime
 type AllAnime = [Anime]
-
+-- | WatchedAnime is just a list of Anime
 type WatchedAnime = AllAnime
+-- | NextAnime    is just a list of Anime
 type NextAnime    = AllAnime
+-- | OtherAnime   is just a list of Anime
 type OtherAnime   = AllAnime
 
--- | the complete Collection of Anime including those watched, those who are going to be watched next and the others, from which only the name might be known.
+-- | The complete Collection of Anime including those watched, those who are going to be watched next and the others, from which only the name might be known.
 data CompleteCollection = Co { watched :: WatchedAnime, next :: NextAnime, other :: OtherAnime }
   deriving (Eq)
 
 instance Show CompleteCollection where
   show (Co wa ne ot) = "---- ---- Watched:\n" ++ show wa ++ "\n\n---- ---- Next:\n" ++ show ne ++ "\n\n---- ---- Other known ones:\n" ++ show ot
 
--- putting all Anime in a Human-readable form
+-- | Putting all Anime in a Human-readable form
 listReadable :: CompleteCollection -> String
 listReadable (Co wa ne ot) = unlines . map listAnime $ (wa ++ ne ++ ot)
 

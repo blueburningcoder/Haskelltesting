@@ -1,15 +1,19 @@
+-- | Main module begins HERE :P
+
 module Main where
 
-import General
-import Anime.Types.Old
-import Anime.Files
-import Anime.Menu
-import Anime.Stats
-import System.Environment (getArgs, withArgs)
+import           Prelude
+import           General
+import           Anime.Files.Old
+import           Anime.Menu.Old
+import           Anime.Stats
 
--- the main function
+import           System.Environment (getArgs)
+
+-- | The main function
+main :: IO ()
 main = do
-  loadList  -- for later not overwriting unread parts of the file
+  _ <- loadList  -- for later not overwriting unread parts of the file
   args <- getArgs
   if length args < 1 then putStrLn "Please type an argument too ... [EXEC help]" >> help else do
     case head args of
@@ -25,7 +29,8 @@ main = do
   resetFiles
 
 
-
--- some test-information for not having an empty file
+{-
+-- | some test-information for not having an empty file
 testAllAnime = [ newAnime "Gantz" 212, newAnime "Zetsuen no Tempest" 125]
 testComplete = Co [] [] testAllAnime
+-}

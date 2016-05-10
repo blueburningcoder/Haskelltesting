@@ -1,15 +1,17 @@
-module Anime.Menu where
+-- | This module includes basically the functional main menu, it is dependent upon most other modules
+
+module Anime.Menu.Old where
 
 import General
 import Anime.Types.Old
-import Anime.Files
+import Anime.Files.Old
 
 import Control.Applicative ((<$>), (<*>))
 import Data.List (isInfixOf)
 import Text.Read (readMaybe)
 
 
--- | showing a simple help
+-- | Showing a simple help
 help :: IO ()
 help = do 
   putStrLn "This is the unfinished help section :P\n"
@@ -27,12 +29,12 @@ help = do
   putStrLn "Note: There is autocompletion, meaning that even with the minumum unique input,"
   putStrLn "you will get the correct result (commands excluded)."
 
--- | creates a new Anime based only on the name
+-- | Creates a new Anime based only on the name
 newAnime :: String -> ID -> Anime
 newAnime name id = Anime id name NoRating Unknown Unknown
 
 
--- | creating a Anime anew completely
+-- | Creating a Anime anew completely
 completelyNew :: [String] -> IO Anime
 completelyNew []   = do
   list <- loadList
@@ -55,12 +57,11 @@ completelyNew args = do
           (name, Just id) -> completelyNew [name, show id]
           (name, Nothing) -> completelyNew [name]
 
--- for whatever reason this is sometimes necessary
+-- | For whatever reason this is sometimes necessary
 addNewAnime :: [String] -> IO ()
 addNewAnime args = completelyNew args >>= addAnime
 
-
--- | editing the information about an Anime
+-- | Editing the information about an Anime
 edit :: [String] -> IO ()
 edit []   = prompt "What property do you want to edit? : " >>= selectProperty >>= (\p -> edit [p])
 edit args = do
@@ -75,12 +76,12 @@ edit args = do
       saveComplete $! modifyInList all (name selAn) edi
     _ -> putStrLn "That were too many arguments. Please Try again." >> edit []
 
--- | all selectable properties
+-- | All selectable properties
 properties :: [String]
 properties = ["id", "name", "rating", "epwatched", "eptotal"]
 
 
--- | selecting a property
+-- | Selecting a property
 selectProperty :: String -> IO String
 selectProperty p =
   case length closest of
@@ -90,7 +91,7 @@ selectProperty p =
   closest = getClosest properties 5 (\a -> isInfixOf p a)
 
 
--- | edits the property of the given Anime and returns it with the new property
+-- | Edits the property of the given Anime and returns it with the new property
 editAnime :: CompleteCollection -> Anime -> String -> String -> Anime
 editAnime co (Anime id nam rat ep wa) prop new =
   case prop of
@@ -103,33 +104,34 @@ editAnime co (Anime id nam rat ep wa) prop new =
     _ -> error "No Property of an Anime"
 
 
--- | modifies only the one Anime specified by name
+-- | Modifies only the one Anime specified by name
 modifyAnime :: AllAnime -> Anime -> String -> AllAnime
 modifyAnime (l:li) new nam = if name l == nam then new:li else l:(modifyAnime li new nam)
 modifyAnime []      _   _  = []
 
--- | modifies only the Anime specified by id
+-- | Modifies only the Anime specified by id
 modifyAnime' :: AllAnime -> Anime -> ID -> AllAnime
 modifyAnime' (l:li) new id = if getId l == id then new:li else l:(modifyAnime' li new id)
 modifyAnime' []      _  _  = []
 
--- | modifies each occurrence of the anime in each of the lists
+-- | Modifies each occurrence of the anime in each of the lists
 modifyInList :: CompleteCollection -> String -> Anime -> CompleteCollection
 modifyInList (Co wa ne ot) nam an = (Co (mod wa) (mod ne) (mod ot) )
   where mod = (flip . flip modifyAnime) an nam
 
+-- | Same as modifyInList but with the ID instead of the Name as an argument
 modifyInList' :: CompleteCollection -> ID -> Anime -> CompleteCollection
 modifyInList' (Co wa ne ot) id an = (Co (mod wa) (mod ne) (mod ot) )
   where mod = (flip . flip modifyAnime') an id
 
--- | deletes the given Anime, or asks to select one if none is given
+-- | Deletes the given Anime, or asks to select one if none is given
 delAnime :: [String] -> IO ()
 delAnime args =
   case length args of
     1 -> selectAnime (args !! 0) >>= deleteAnime
     _ -> prompt "Please enter the name or id of the Anime you wish to delete. : " >>= selectAnime >>= deleteAnime
 
--- fast helper for editing
+-- | Fast helper for editing
 seen :: [String] -> IO ()
 seen []   = prompt "How many Episodes is the new count? : " >>= (\u -> seen [u])
 seen args =
@@ -140,6 +142,7 @@ seen args =
         loadList >>= saveComplete . (\li -> modifyInList' li (getId anime) (animF anime) )
     n -> seen [head args, fst . readArgs . tail $ args]
 
+-- | Basically tries to read the the argument
 determineNum :: String -> (Anime -> Anime)
 determineNum "next" = (\ (Anime id nam rat epwa epto) -> Anime id nam rat (succ epwa)        epto)
 determineNum "all"  = (\ (Anime id nam rat epwa epto) -> Anime id nam rat epto               epto)
