@@ -1,4 +1,7 @@
+*.sw*
+.*.*.swp
 */.*.*.swp
 */.*
+*.config
 */dist
 
