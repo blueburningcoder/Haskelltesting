@@ -11,7 +11,7 @@ import           General
 
 import           Data.Binary
 import           Data.Vector.Binary()
-import           Data.Monoid
+import           Data.Monoid hiding (All)
 import           Data.List    (sort, nub)
 import qualified Data.Foldable as F
 import qualified Data.Vector as V
@@ -21,8 +21,10 @@ import           Debug.Trace
 
 
 -- | A Rating is either nothing or some rating from 0.0 up to 10.0
+--
 data Rating = NoRating | Rating Double
   deriving (Read, Eq, Ord)
+
 
 instance Show Rating where
   show NoRating     = "_._"
@@ -41,8 +43,10 @@ instance Binary Rating where
 
 
 -- | The number of Episodes is either Unknown, Zero (yet), or some Int
+--
 data Episodes = Unknown | Zero | Episodes Int
   deriving (Eq, Ord, Read)
+
 
 instance Enum Episodes where
   succ Unknown      = Zero
@@ -63,6 +67,7 @@ instance Show Episodes where
   show (Episodes num) = show num
 
 -- | Reads the String and turns it into an Episode
+--
 readEpisodes :: String -> Episodes
 readEpisodes "Unknown" = Unknown
 readEpisodes "Zero"    = Zero
@@ -86,8 +91,9 @@ instance Binary Episodes where
 
 
 -- | The Category of an Anime, being either only beknown, intended to be seen at some point, 
--- currently getting viewed or having been watched already
-data Category = Other | Next | Current | Watched
+--   currently getting viewed or having been watched already
+--
+data Category = Other | Next | Current | Watched | All
   deriving (Show, Read, Eq, Ord)
 
 instance Enum Category where
@@ -97,11 +103,13 @@ instance Enum Category where
   fromEnum Next    = 1
   fromEnum Current = 2
   fromEnum Watched = 3
+  fromEnum All     = 4
   toEnum 0 = Other
   toEnum 1 = Next
   toEnum 2 = Current
   toEnum 3 = Watched
-  toEnum n = toEnum $ n `mod` 4
+  toEnum 4 = All
+  toEnum n = toEnum $ n `mod` 5
 
 instance Binary Category where
   put Other   = put (0 :: Int)
@@ -121,7 +129,9 @@ type ID   = Int
 -- | The Anime's name is not a String, but a Text this time
 type Name = T.Text
 
--- | An Anime usually consists of the name, the rating, the episodes watched and total, as well as the place of whatever category it is in
+-- | An Anime usually consists of the name, the rating, the episodes watched and total,
+--   as well as the place of whatever category it is in
+--
 data Anime = Anime { uniqueId  :: {-# UNPACK #-} !ID
                    , name      :: {-# UNPACK #-} !Name
                    , rating    ::                !Rating
@@ -130,8 +140,10 @@ data Anime = Anime { uniqueId  :: {-# UNPACK #-} !ID
                    , place     :: {-# UNPACK #-} !ID }
 
 -- | The singleton Anime
+--
 singleton :: Anime
 singleton = Anime 0 "" NoRating Unknown Unknown 0
+
 
 -- | Giving the Anime a new Name
 newName    :: Anime -> Name     -> Anime
@@ -180,10 +192,13 @@ instance Binary Anime where
 instance Show Anime where
   show (Anime uid nam rat wa to _) = "Anime with uid " ++ show uid ++ " is " ++ show nam ++ " with Rating " ++ show rat ++ " and " ++ show wa ++ "/" ++ show to ++ " seen.\n"
 
--- | Listing the Anime in a more easily readable form not showing *every* information
+
+-- | Listing the Anime in a more easily readable form showing only necessary information
+--
 listAnime :: Anime -> String
 listAnime (Anime _ nam rat wa to _) = begin ++ (concat . take (100 - length begin) . repeat $ " ") ++ " - (" ++ show rat ++ ")"
   where begin = T.unpack nam ++ "; (" ++ show wa ++ "/" ++ show to ++ ")"
+
 
 {-
  - -- for some strange reason this version does not at all work
@@ -195,16 +210,20 @@ listAnime' (Anime id nam rat wa to _) =
 -}
 
 -- | Listing Anime more readable in a Text instead of a String
+--
 listAnime' :: Anime -> T.Text
 listAnime' = T.pack . listAnime
 
+
 -- | Returns only the selected one if the name got exactly specified, otherwise changes nothing
+--
 isSameAnime :: T.Text -> [Anime] -> [Anime]
 isSameAnime n li = isSame' n name li
 
 
 
 -- | This is supposed to make inserting new Anime in a Collection easier and safer
+--
 class Insertable a where
   insert :: Anime -> a -> a
   insertAll :: F.Foldable t => t Anime -> a -> a
@@ -215,35 +234,44 @@ class Insertable a where
 -- | This is basically a list of Anime, although, a Vector is more efficient
 type AllAnime = V.Vector Anime
 
+
 -- | Collection types : Other, Next, Current, Watched
+--
 data Collection =
   Col { cat    ::                !Category
       , cMaxId :: {-# UNPACK #-} !ID
       , list   :: {-# UNPACK #-} !AllAnime }
 
+
 -- | The size of the Collection
+--
 size :: Collection -> Int
 size (Col _ _ li) = V.length li
 
+
 -- | Returns if this Collection has the Anime with this particular ID
+--
 hasId :: Collection -> ID -> Bool
-hasId (Col _ _ li) i = V.foldr (\a b -> if b then b else uniqueId a == i) False li
+hasId (Col _ _ li) i = V.any (\a -> uniqueId a == i) li
+
 
 -- | Returns if this Collection has this particular Anime or not
+--
 cElem :: Collection -> Anime -> Bool
 cElem c a = hasId c (uniqueId a)
 
 -- | simply creates the required Collection
+--
 createCollection :: Category -> Collection
 createCollection c = Col c 0 V.empty
+
 
 instance Show Collection where
   show (Col n _ l) = "---- ---- (" ++ show (V.length l) ++ ") ---- " ++ show n ++ ":\n" ++ (V.foldr (\a b -> b ++ show a) "" l)
 
 instance Monoid Collection where
   mempty = Col Other 0 mempty
-  mappend a (Col _ _ lj) = Col Other (cMaxId c) (list c)
-    where c = insertAll lj a
+  mappend a (Col _ _ lj) = insertAll lj a
 
 instance Insertable Collection where
   insert a b@(Col m ma li) =
@@ -264,29 +292,56 @@ instance Binary Collection where
 
 -- | The complete Collection of Anime including those watched, those who are going to be watched next and the others, 
 -- from which only the name might be known. (work in progress)
+--
 data CompleteCollection a =
   Com { table :: V.Vector a, maxId :: ID}
 
+
+-- | just a type synonym, making things easier to read and write
+-- CompleteCollection is basically only used with Collection either way
+--
+type Complete = CompleteCollection Collection
+
+
+-- | The Complete singleton, or empty completeCollection
+--
+singletonCC :: Complete
+singletonCC = Com V.empty 0
+
+
 -- | Returns only the Collection with the specified Category
-getWithCat :: Category -> CompleteCollection Collection -> Collection
+--
+getWithCat :: Category -> Complete -> Collection
 getWithCat c (Com ta _) = if V.length filt > 1 then V.foldr1 mappend ta else
     if V.length filt == 1 then filt V.! 0 else createCollection c
   where filt = V.filter (\d -> cat d == c) ta
 
+
 -- | Inserts a Collection in the CompleteCollection, manages correct replacing if required
-insertCol :: CompleteCollection Collection -> Collection -> CompleteCollection Collection
+--
+insertCol :: Complete -> Collection -> Complete
 insertCol (Com ta m) c = Com (V.cons c ta) (max (cMaxId c) m)
 
+
 -- | Merges the same categories together, if required            TODO!
-mergeSameCategories :: CompleteCollection Collection -> CompleteCollection Collection
+--
+mergeSameCategories :: Complete -> Complete
 mergeSameCategories c@(Com ta _) = (trace . show $ cats) $
     case length cats of
       0 -> c
-      _ -> undefined
+      _ -> foldl insertCol singletonCC [getWithCat ca c | ca <- getDifferentCategories c]
   where cats = getDoubles . sort . V.toList $ V.map cat ta
 
+
+-- | Concatinates all seperate lists to one complete one
+--
+getAll :: Complete -> Collection
+getAll (Com ta m) = V.foldr mappend (createCollection All) ta
+
+
 -- | Makes a list of all the different Categories, listing each of them only once, occuring in a Complete Collection
-getDifferentCategories :: CompleteCollection Collection -> [Category]
+--
+getDifferentCategories :: Complete -> [Category]
 getDifferentCategories (Com ta _) = nub $ V.toList $ V.map cat ta
 
 
@@ -305,34 +360,42 @@ instance Binary a => Binary (CompleteCollection a) where
     m  <- get
     return $ (Com ta m)
 
-instance Insertable Collection => Insertable (CompleteCollection Collection) where
+instance Insertable Collection => Insertable Complete where
   insert a c = insertCol c (insert a mempty)
 
 instance Insertable a => Insertable (V.Vector a) where
   insert a v | V.null v = v
     | otherwise = return (insert a (v V.! 0) ) V.++ V.tail v
 
+
 {-
-instance Monoid Collection => Monoid (CompleteCollection Collection) where
+instance Monoid Collection => Monoid Complete where
   mempty = Com mempty 0
   mappend (Com ta m) b = V.foldr insertAll b ta
 -}
 
 
 -- | Putting all Anime in a human-readable form
+--
 listReadable :: Show a => CompleteCollection a -> String
 listReadable (Com ta _) = V.foldr (\a b -> b ++ show a) "" ta
 
-listReadable' :: CompleteCollection Collection -> T.Text
+
+-- | putting all Anime in a human-readable form in a Text
+--
+listReadable' :: Complete -> T.Text
 listReadable' (Com ta _) = V.foldr (\a b -> b `T.append` (V.foldr (\c d -> d `T.append` listAnime' c ) "" (list a) ) ) "" ta
+
+
 
 {-
 testAnime  = Anime 1 "Gantz" NoRating Unknown Unknown 1
 testAnime2 = Anime 2 "Re:Zero kara Hajimeru Isekai Seikatsu" NoRating Unknown Unknown 2
+testAnime3 = Anime 3 "Koutetsujou no Kabaneri" NoRating Unknown Unknown 3
 
 
-testCollection  = Col Other 2 (V.fromList [testAnime2,testAnime])
-testCollection2 = Col Next  2 (V.fromList [testAnime,testAnime2])
+testCollection  = Col Other 2 (V.fromList [testAnime2,testAnime,testAnime3])
+testCollection2 = Col Next  2 (V.fromList [testAnime,testAnime3,testAnime2])
 
 testComplete    = Com (V.fromList [testCollection,testCollection2]) 2
 

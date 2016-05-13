@@ -8,6 +8,9 @@ import           Anime.Files.Old
 import           Anime.Menu.Old
 import           Anime.Stats
 
+import qualified Anime.Files.New as FN
+import qualified Anime.Types.New as TN
+
 import           System.Environment (getArgs)
 
 -- | The main function
