@@ -18,7 +18,7 @@ help = do
   putStrLn "available right now are:"
   putStrLn "help                            - showing this text with some information"
   putStrLn "show [-human]                   - shows all Anime in the binary, '-human': might be more 'human' readable"
-  putStrLn "add  [NAME] [ID]                - prompts the user and then adds the Anime to 'other'"
+  putStrLn "add  [NAME] [-i ID]             - prompts the user and then adds the Anime to 'other'"
   putStrLn "edit [PROPERTY] [NAME/ID] [NEW] - lets the user edit all properties of an Anime"
   putStrLn "seen [NUM/next/all] [NAME/ID]   - adds the number [of episodes seen] to the specified Anime"
   putStrLn "del  [NAME/ID]                  - deletes the uniquely identifyable Anime"
