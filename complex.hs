@@ -5,8 +5,8 @@ import Data.Monoid
 type R = Double
 
 data Complex = Co R R -- First is the Real part, second is the Imagenary
-data Polar = Po R R -- First is the absolute distence, second is the direction in radians
--- needed only later for 
+data Polar = Po R R -- First is the absolute distance, second is the direction in radians
+-- needed only later for exponentiation and such
 
 
 -- | to show them a bit differently than they should be displayed, just the way they should be displayed
@@ -165,13 +165,9 @@ sqrtComplex :: Complex -> Complex
 sqrtComplex (Co a b) = Co (sqrt $ (a + c) / 2) ((signum b) * sqrt (((-a) + c) / 2))
     where c = sqrt $ a * a + b * b
 
--- mandelbrot :: IO ()
-
 -- returns the next Number from the Mandelbrot-se
 mandelNext :: Complex -> Complex -> Complex
 mandelNext z c = z * z + c
-
--- mandelbrot :: IO ()
 
 -- If this complex result with this initial complex number and so many iterations left is part of the Mandelb
 mandelElem :: Complex -> Complex -> Int -> Bool
@@ -207,9 +203,6 @@ plotMandel :: IO ()
 plotMandel = printing $ map isElem crange
 
 -- recipComplex :: Complex -> Complex
-
-
-mandelbrot :: IO ()
 
 fac :: Integral a => a -> a
 fac 0 = 1

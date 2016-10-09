@@ -1,23 +1,23 @@
-module GaussianSolver where
+module GaussianSolver2 where
 
 import Data.Maybe (fromMaybe)
 import Debug.Trace (trace)
 
 type Vector = [Double]
 type Matrice = [Vector]
-data Line = Line Vector Double 
+data Line = Line Vector Double
     deriving (Show, Read, Eq, Ord)
-newtype GMatrice = GMatrice { getGMatrice :: [Line] } 
+newtype GMatrice = GMatrice { getGMatrice :: [Line] }
     deriving (Read, Eq, Ord)
 
-mAX_MATRICE_LENGTH = 12
+_MAX_MATRICE_LENGTH = 12
 
 instance Show GMatrice where
     show (GMatrice [])     = ""
     show (GMatrice (l:li)) = (show l) ++ "\n" ++ show (GMatrice li)
 
 eq :: Line -> Line -> Bool
-eq (Line vec d) (Line cec b) = d == b && (take mAX_MATRICE_LENGTH vec) == (take mAX_MATRICE_LENGTH cec)
+eq (Line vec d) (Line cec b) = d == b && (take _MAX_MATRICE_LENGTH vec) == (take _MAX_MATRICE_LENGTH cec)
 
 -- returns the length of the GMatrice
 length' :: GMatrice -> Int
@@ -32,7 +32,7 @@ last' :: GMatrice -> Line
 last' (GMatrice []) = undefined
 last' (GMatrice l)  = last l
 
-head' :: GMatrice -> Line 
+head' :: GMatrice -> Line
 head' (GMatrice []) = undefined
 head' (GMatrice l)  = head l
 
@@ -65,8 +65,8 @@ solveGMatrice m
     | otherwise      = []
 
 -- solving the given Line with the Vector including the xn already solved which might be needed
-solveLine :: Line -> Vector -> Vector -- or Double ? 
-solveLine (Line vec d) v 
+solveLine :: Line -> Vector -> Vector -- or Double ?
+solveLine (Line vec d) v
     | length v == 0 = [d / (last vec)]
     | otherwise     = (solveLine (Line (init vec) (d - (last vec) * (last v))) (init v)) ++ [last v]
 
@@ -101,14 +101,14 @@ oneLine = Line [1,1..2] 1
 
 -- returns a 'fitting' line for the given line from the given Matrice
 getFittingLine :: GMatrice -> Line -> Line
-getFittingLine (GMatrice []) l       = (trace "\n\nNO fitting line\n\n") oneLine
+getFittingLine (GMatrice []       ) l    = (trace "\n\nNO fitting line\n\n") oneLine
 getFittingLine (GMatrice (l:lines)) line = if lineFittingNotEqual l line then l else getFittingLine (GMatrice lines) line
 
 -- if the lines are 'fitting' in the sense of having zeros at the same places and are not equal
 lineFittingNotEqual :: Line -> Line -> Bool
 lineFittingNotEqual (Line vec d) (Line bec b) = foldfit (d:vec) (b:bec) True && vec /= bec
 
--- folds over the vectors 
+-- folds over the vectors
 foldfit :: Vector -> Vector -> Bool -> Bool
 foldfit _ _ False       = False
 foldfit [] _ b          = b
@@ -131,11 +131,11 @@ foldf m ([x,y]:c) f
 
 -- zeroing one explicit value and returning the new Matrice
 zeroThisValue :: GMatrice -> Int -> Int -> GMatrice
-zeroThisValue a@(GMatrice (b@(Line vec d):(c@(Line veC dd)):l)) x 0 = 
+zeroThisValue a@(GMatrice (b@(Line vec d):(c@(Line veC dd)):l)) x 0 =
         let factor  = calcZeroFactor (vec !! x) (veC !! x)
             newLine = lineSub (lineOp c (*factor)) b
         in insGMat a newLine 0
-zeroThisValue m x y = 
+zeroThisValue m x y =
         let mat = zeroThisValue (tail' m +++ GMatrice [head' m]) x (y-1)
         in GMatrice [last' mat] +++ init' mat
 
@@ -148,14 +148,14 @@ zeroThisValue' m x 0 = let
         factor  = calcZeroFactor' line fit x
         newLine = lineSub (lineOp fit (*factor)) line
         in insGMat m newLine 0
-zeroThisValue' m x y = 
+zeroThisValue' m x y =
         let mat = zeroThisValue' (tail' m +++ GMatrice [head' m]) x (y-1)
         in GMatrice [last' mat] +++ init' mat
 
 -- second version, should be more efficient, but is not yet working for some reason with some input
 zeroThisValue'' :: GMatrice -> Int -> Int -> GMatrice
 zeroThisValue'' m x y =
-    if b then zeroThisValue'' ((init' . init' $ m) +++ GMatrice [last' m] +++ GMatrice [last' . init' $ m]) x y 
+    if b then zeroThisValue'' ((init' . init' $ m) +++ GMatrice [last' m] +++ GMatrice [last' . init' $ m]) x y
         else if line ! x == 0.0 then m else insGMat m newLine y
     where
         line    = getCol m y
@@ -179,7 +179,7 @@ vecSub (v:vec) (b:bec) = (v - b):(vecSub vec bec)
 -- the substraction of the multiplication of this factor with the second parameter with the first parameter is going to be zero -- is this description even correct ?
 calcZeroFactor :: Double -> Double -> Double
 calcZeroFactor = (/)
--- calcZeroFactor d dd = d / dd 
+-- calcZeroFactor d dd = d / dd
 
 -- calculating the zero-factor for two lines, based on the x-offset
 calcZeroFactor' :: Line -> Line -> Int -> Double
@@ -199,7 +199,7 @@ insGMat mat nl i = let m = insGMat (tail' mat +++ GMatrice [head' mat]) nl (i-1)
 
 --         | otherwise = (GMatrice (l:(getGMatrice (insGMat (GMatrice  li) nl (i-1)))))
 --         | otherwise = insGMat (GMatrice li) nl (i - 1)
-        
+
 
 -- might return the wanted line. Nothing if the GMatrice is empty
 getCol :: GMatrice -> Int -> Line
@@ -218,7 +218,7 @@ getVal (GMatrice ((Line vec d):li)) = d:(getVal (GMatrice li))
 
 -- doing an operation over the whole GMatrice
 gMatOp :: GMatrice -> (Double -> Double) -> GMatrice
-gMatOp (GMatrice []) _     = (GMatrice [])
+gMatOp (GMatrice [])     _ = (GMatrice [])
 gMatOp (GMatrice (l:li)) f = GMatrice $ (lineOp l f):(getGMatrice $ gMatOp (GMatrice li) f)
 
 -- doing an operation on the given line

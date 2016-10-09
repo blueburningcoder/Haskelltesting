@@ -65,12 +65,12 @@ maximum' (x:xs)
 
 flip' :: (a -> b -> c) -> (b -> a -> c)
 flip' f = g
-    where g x y = f y x
+    where g b a = f a b
 
 chain :: (Integral a) => a -> [a]
 chain 1 = [1]
-chain n 
-    | even n = n:chain (div n 2)
+chain n
+    | even n = n:chain (n `div` 2)
     | odd n = n:chain (n*3 + 1)
 
 
@@ -108,7 +108,7 @@ bmiTell weight height                             -- NO = at the end of this lin
 calcBmis :: (RealFloat a) => [(a, a)] -> [a]
 calcBmis xs = [bmi w h | (w, h) <- xs]
     where bmi weight height = weight / height ^ 2
--- short for for: 
+-- short for for:
 -- bmi :: a -> a -> a
 -- bmi weight height = weight / height ^ 2
 --
@@ -133,7 +133,7 @@ describeList xs = "The list is " ++ what xs
 
 quicksort :: (Ord a) => [a] -> [a]
 quicksort [] = []
-quicksort (x:xs) = 
+quicksort (x:xs) =
     let smallerSorted = quicksort [a | a <- xs, a <= x]
         biggerSorted = quicksort [a | a <- xs, a > x]
     in smallerSorted ++ [x] ++ biggerSorted
@@ -203,7 +203,7 @@ baseRect :: Float -> Float -> Shape
 baseRect w h = Rectangle (Point 0 0) (Point w h)
 
 
-infixr 5 :-: 
+infixr 5 :-:
 
 data List a = Empty | a :-: (List a) deriving (Show, Read, Eq, Ord)
 

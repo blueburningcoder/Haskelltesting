@@ -2,6 +2,7 @@
 import Control.Applicative
 import Control.Monad
 import Control.Monad.Writer
+import Data.Ratio
 
 
 
@@ -28,7 +29,7 @@ anti l [] = l
 anti (a:b) (c:d) = if a == c then anti b d else c:(anti (a:b) d)
 
 -- Euler's phi-function
--- Für jede positive ganze Zahl n bezeichnet φ(n) die 
+-- Für jede positive ganze Zahl n bezeichnet φ(n) die
 -- Anzahl der zu n teilerfremden Zahlen k, für die 1 <= k < n gilt.
 -- Diese Funktion φ heiẞt euler'sche φ-Funktion
 
@@ -99,5 +100,129 @@ gcd' a b
 
 
 
+
+
+-- import Data.Ratio
+
+
+newtype Prob a = Prob { getProb :: [(a, Rational)] }
+  deriving Show
+
+instance Eq a => Eq (Prob a) where
+  (Prob a) == (Prob b) = a == b
+
+{-
+instance Ord a => Ord (Prob a) where
+  (Prob a) > (Prob b) = a > b
+-}
+
+instance Functor Prob where
+  fmap f (Prob xs) = Prob $ map (\(x,p) -> (f x,p) ) xs
+
+
+flatten :: Prob (Prob a) -> Prob a
+flatten (Prob xs) = Prob . concat $ map multAll xs
+  where multAll (Prob innerxs, p) = map (\(x,r) -> (x,r * p) ) innerxs
+
+
+instance Applicative Prob where
+  pure = return
+  fs <*> xs = xs >>= fs
+
+instance Monad Prob where
+  return x = Prob $ [(x, 1%1)]
+  m >>= f = flatten $ fmap f m
+  fail _ = Prob []
+
+
+
+data Coin = Head | Tails
+  deriving (Show, Eq)
+
+coin :: Prob Coin
+coin = Prob $ [(Head, 1 % 2), (Tails, 1 % 2)]
+
+loadedCoin :: Prob Coin
+loadedCoin = Prob $ [(Head, 1 % 10), (Tails, 9 % 10)]
+
+
+flipThree :: Prob Bool
+flipThree = do
+  a <- coin
+  b <- coin
+  c <- coin
+  return $ all (==Tails) [a,b,c]
+
+
+{-
+flipCoins :: [Prob Coin] -> Prob [Coin]
+flipCoins [x] = do
+  a <- x
+  return [a]
+flipCoins (x:xs) = do
+  a <- x
+  b <- flipCoins xs
+  return a:b
+-}
+
+
+(-:) :: a -> (a -> b) -> b
+x -: f = f x
+
+data Tree a = Empty | Node a (Tree a) (Tree a)
+  deriving (Show)
+
+data Crumb a = LeftCrumb a (Tree a) | RightCrumb a (Tree a)
+  deriving (Show)
+
+type Zipper a = (Tree a, [Crumb a])
+
+goRight :: Zipper a -> Zipper a
+goRight (Empty, bs) = (Empty, bs)
+goRight ( (Node x lt rt), bs) = (rt, (RightCrumb x lt):bs )
+
+goLeft :: Zipper a -> Zipper a
+goLeft (Empty, bs) = (Empty, bs)
+goLeft ( (Node x lt rt), bs) = (lt, (LeftCrumb x rt):bs )
+
+goUp :: Zipper a -> Zipper a
+goUp (lt, (LeftCrumb  x rt):cr) = (Node x lt rt, cr)
+goUp (rt, (RightCrumb x lt):cr) = (Node x lt rt, cr)
+goUp ( t, []) = (t, [])
+
+
+modify :: (a -> a) -> Zipper a -> Zipper a
+modify f (Node x lt rt, bs) = (Node (f x) lt rt, bs)
+modify f (Empty, bs) = (Empty, bs)
+
+
+freeTree :: Tree Char
+freeTree =
+    Node 'P'
+        (Node 'O'
+            (Node 'L'
+                (Node 'N' Empty Empty)
+                (Node 'T' Empty Empty)
+            )
+            (Node 'Y'
+                (Node 'S' Empty Empty)
+                (Node 'A' Empty Empty)
+            )
+        )
+        (Node 'L'
+            (Node 'W'
+                (Node 'C' Empty Empty)
+                (Node 'R' Empty Empty)
+            )
+            (Node 'A'
+                (Node 'A' Empty Empty)
+                (Node 'C' Empty Empty)
+            )
+        )
+
+
+
+fibs :: [Integer]
+fibs = 0 : 1 : zipWith (+) fibs (tail fibs)
 
 

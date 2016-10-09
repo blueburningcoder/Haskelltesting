@@ -21,8 +21,8 @@ instance Functor (Barry a b) where
     fmap f (Barry { yabba = x, dabba = y}) = Barry { yabba = f x, dabba = y}
 
 
-main = do 
-    line <- getLine 
+main = do
+    line <- getLine
     if null line
         then return ()
         else do
@@ -35,10 +35,10 @@ reverseWords = unwords . map reverse . words
 
 
 
-bar = 
+bar =
     let a = 1; b = 2; c = 3
-    in a + b + c 
--- weird indendation ... 
+    in a + b + c
+-- weird indendation ...
 --
 
 
@@ -65,7 +65,8 @@ lengthCompare x y = (length x `compare` length y) `mappend` (x `compare` y)
 
 
 
-data Tree a = Empty | Node a (Tree a) (Tree a) deriving (Show, Read, Eq)
+data Tree a = Empty | Node a (Tree a) (Tree a)
+  deriving (Show, Read, Eq)
 
 {-
 instance Monoid Tree where
@@ -83,15 +84,15 @@ hasValue fb val= getAny $ F.foldMap (\x -> Any $ x == val) fb
 
 
 
-testTree = Node 5  
-            (Node 3  
-                (Node 1 Empty Empty)  
-                (Node 6 Empty Empty)  
-            )  
-            (Node 9  
-                (Node 8 Empty Empty)  
-                (Node 10 Empty Empty)  
-            )  
+testTree = Node 5
+            (Node 3
+                (Node 1 Empty Empty)
+                (Node 6 Empty Empty)
+            )
+            (Node 9
+                (Node 8 Empty Empty)
+                (Node 10 Empty Empty)
+            )
 
 applyMaybe :: Maybe a -> (a -> Maybe b) -> Maybe b
 applyMaybe Nothing _ = Nothing
@@ -200,7 +201,7 @@ type Set a = a -> Bool
 
 
 -- 32
-main' = getLine >>= putStrLn . reverse 
+main' = getLine >>= putStrLn . reverse
 
 askForThree = do
     putStrLn "Please enter a Number"
@@ -261,7 +262,7 @@ guessNumber s b = do
     let diff = div (abs (s - b)) 2
     case res of
         LT -> guessNumber s (b - diff)
-        GT -> guessNumber (s + diff) b 
+        GT -> guessNumber (s + diff) b
         EQ -> return "got your number!"
 
 guess = guessNumber 0 100
@@ -283,7 +284,7 @@ freqAn (l:li) = (l, first):(freqAn others)
     where first = 1 + count li l
           others = filter (\b -> b /= l) li
 
- 
+
 
 
 
