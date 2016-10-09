@@ -23,6 +23,8 @@ display angle pos = do
       cube 0.1
       color $ Color3 0 0 (0 :: GLfloat)
       cubeFrame 0.1
+    translate $ Vector3 0 0 (0 :: GLfloat)
+    quads
   swapBuffers
 
 
