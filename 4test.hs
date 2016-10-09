@@ -1,8 +1,11 @@
+{-# LANGUAGE FlexibleInstances #-}
+
 
 import Control.Applicative
 import Control.Monad
 import Control.Monad.Writer
 import Data.Ratio
+import Data.Monoid
 
 
 
@@ -98,6 +101,21 @@ gcd' a b
 -- getting only the answer: fst $ runWriter (gcd' n1 n2)
 -- getting only the log: mapM_ putStrLn $ snd $ runWriter (gcd' n1 n2)
 
+
+
+data Two a b = Two a b
+  deriving (Show, Eq, Read)
+
+{-
+instance (Monoid a, Monoid b) => Monoid (Two a b) where
+  mempty = Two mempty mempty
+  Two x y `mappend` Two m n = Two (x `mappend` m) (y `mappend` n)
+
+-- -}
+
+instance Monoid a => Monoid (Two Int a) where
+  mempty = Two 0 mempty
+  Two x y `mappend` Two m n = Two x (y `mappend` n)
 
 
 

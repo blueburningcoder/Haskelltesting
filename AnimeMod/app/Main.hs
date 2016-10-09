@@ -10,10 +10,10 @@ import           Anime.Stats
 
 import           System.Environment (getArgs)
 
-import qualified Data.Text as T
-import qualified Data.Vector as V
+-- import qualified Data.Text as T
+-- import qualified Data.Vector as V
 import qualified Anime.Files.New as FN
-import qualified Anime.Types.New as TN
+-- import qualified Anime.Types.New as TN
 import qualified Anime.Menu.New  as MN
 
 

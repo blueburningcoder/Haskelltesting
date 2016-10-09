@@ -6,7 +6,7 @@
 {-# LANGUAGE FlexibleContexts    #-}
 {-# LANGUAGE DeriveGeneric       #-}
 {-# LANGUAGE DeriveDataTypeable  #-}
-{-# LANGUAGE DeriveAnyClass      #-}
+{-# LANGUAGE StandaloneDeriving  #-}
 
 module Anime.Types.New where
 
@@ -53,7 +53,9 @@ instance Binary Rating where
 -- | The number of Episodes is either Unknown, Zero (yet), or some Int
 --
 data Episodes = Unknown | Zero | Episodes Int
-  deriving (Eq, Ord, Read, Binary, Generic)
+  deriving (Eq, Ord, Read, Generic)
+
+instance Binary Episodes
 
 instance Enum Episodes where
   succ Unknown      = Zero
@@ -103,7 +105,9 @@ readEpisodes str       = case maybeRead $ "Episodes " ++ str of
 --   currently getting viewed or having been watched already
 --
 data Category = All | Other | Next | Current | Watched
-  deriving (Show, Read, Eq, Ord, Generic, Enum, Binary)
+  deriving (Show, Read, Eq, Ord, Generic, Enum)
+
+instance Binary Category
 
 -- | Every ID is an Int
 type ID   = Int
@@ -120,9 +124,10 @@ data Anime = Anime { uniqueId  :: {-# UNPACK #-} !ID
                    , watchedEp ::                !Episodes
                    , totalEp   ::                !Episodes
                    , place     :: {-# UNPACK #-} !ID }
-  deriving (Generic, Binary)
+  deriving (Generic)
 --                 , cat       ::                !Category}
 
+instance Binary Anime
 
 instance Eq Anime where
    a == b = uniqueId a == uniqueId b
@@ -214,7 +219,9 @@ data Collection =
   Col { cat    ::                !Category
       , cMaxId :: {-# UNPACK #-} !ID
       , list   :: {-# UNPACK #-} !AllAnime }
-  deriving (Generic, Binary)
+  deriving (Generic)
+
+instance Binary Collection
 
 instance Show Collection where
   show (Col n _ l) = printf "---- ---- (%d) ---- %s :\n%s" (V.length l) (show n) (V.foldr (\a b -> b ++ show a) "" l)

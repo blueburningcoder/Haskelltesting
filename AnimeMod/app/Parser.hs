@@ -1,16 +1,18 @@
 module Main where
 
+import Prelude
+
 import Anime.Types.Old
 import Anime.Files.Old
-import Anime.Menu.Old
+-- import Anime.Menu.Old
 
 import System.Environment
 
-import Debug.Trace
+-- import Debug.Trace
 
 
 
-
+main :: IO ()
 main = do
   [args] <- getArgs
   file   <- readFile args
@@ -24,17 +26,17 @@ main = do
 
 -- reading a single line, and combines it with the line number as the id
 readLine :: (String, Int) -> Anime
-readLine (anim, li) = Anime li name NoRating waep toep
+readLine (anim, li) = Anime li name' NoRating waep toep
   where
-  (name, waep, toep) = parse anim
-  
+  (name', waep, toep) = parse anim
+
 
 -- Parsing a single line
 parse :: String -> (String, Episodes, Episodes)
 parse ""  = ("", Unknown, Unknown)
-parse str = (name, epwa, epto)
-  where 
-  name  = takeWhile (\c -> c /= ';') str
+parse str = (name', epwa, epto)
+  where
+  name' = takeWhile (\c -> c /= ';') str
   begin = dropWhile (\c -> c /= '(') . dropWhile (\c -> c /= ';') $ str
   epwa  = safeEpWa begin
   epto  = safeEpTo begin
@@ -42,7 +44,7 @@ parse str = (name, epwa, epto)
 
 safeEpWa :: String -> Episodes
 safeEpWa ""  = Unknown
-safeEpWa str = readEpisodes $ tail . takeWhile (\c -> c /= '/') $ str 
+safeEpWa str = readEpisodes $ tail . takeWhile (\c -> c /= '/') $ str
 
 safeEpTo :: String -> Episodes
 safeEpTo ""  = Unknown
