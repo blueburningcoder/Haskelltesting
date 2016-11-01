@@ -2,6 +2,7 @@ import Data.Monoid
 import qualified Data.Foldable as F
 import Data.List
 import Debug.Trace
+import Control.Applicative
 -- not needed for most things
 
 
@@ -285,7 +286,76 @@ freqAn (l:li) = (l, first):(freqAn others)
           others = filter (\b -> b /= l) li
 
 
+data SumTree a = Edge Int (SumTree a) (SumTree a) | Leaf Int a
+  deriving (Show)
 
+type Code a = [(a, [Bool])]
+
+instance Eq (SumTree a) where
+  Leaf n _   == Leaf m _   = n == m
+  Leaf n _   == Edge m _ _ = n == m
+  Edge n _ _ == Leaf m _   = n == m
+  Edge n _ _ == Edge m _ _ = n == m
+
+
+instance Ord (SumTree a) where
+  compare (Leaf n _)   (Leaf m _)   = compare n m
+  compare (Leaf n _)   (Edge m _ _) = compare n m
+  compare (Edge n _ _) (Leaf m _)   = compare n m
+  compare (Edge n _ _) (Edge m _ _) = compare n m
+
+instance Functor SumTree where
+  fmap f (Leaf n a) = Leaf n (f a)
+  fmap f (Edge n a b) = Edge n (fmap f a) (fmap f b)
+
+instance Applicative SumTree where
+  pure a = Leaf 1 a
+  (<*>) = undefined
+--  (Leaf n a) <*> (Leaf m b) = Leaf n (a b)
+--  (Edge n a b) <*> (Edge m c d) =
+
+singleton :: a -> SumTree a
+singleton = pure
+
+nsingleton :: a -> Int -> SumTree a
+nsingleton a n = Leaf n a
+
+
+createEdge :: SumTree a -> SumTree a -> SumTree a
+createEdge a@(Leaf n _)   b@(Leaf m _)   = Edge (n + m) a b
+createEdge a@(Leaf n _)   b@(Edge m _ _) = Edge (n + m) a b
+createEdge a@(Edge n _ _) b@(Leaf m _)   = Edge (n + m) a b
+createEdge a@(Edge n _ _) b@(Edge m _ _) = Edge (n + m) a b
+
+
+buildTree :: [SumTree a] -> SumTree a
+buildTree li@(_:_:_) = buildTree $ newPar:other
+  where
+  sorted = Data.List.sort li
+  [a, b] = take 2 sorted
+  other  = drop 2 sorted
+  newPar = createEdge a b
+buildTree [e] = e
+
+
+treeToCode :: Eq a => SumTree a -> Code a
+treeToCode (Edge _ a b) =
+    ((treeToCode a) >>= (\(c, l) -> [(c,  True:l)]) ) ++
+    ((treeToCode b) >>= (\(d, l) -> [(d, False:l)]) )
+treeToCode (Leaf _ a) = [(a, [])]
+
+createHuffmanCode :: Eq a => [a] -> Code a
+createHuffmanCode = treeToCode . buildTree . toSumTree
+
+
+encodeHuffman :: Eq a => Code a -> [a] -> [Bool]
+encodeHuffman = undefined
+decodeHuffman :: Eq a => Code a -> [Bool] -> [a]
+decodeHuffman = undefined
+
+
+toSumTree :: Eq a => [a] -> [SumTree a]
+toSumTree li = freqAn li >>= (\(a, n) -> return $ nsingleton a n)
 
 
 
