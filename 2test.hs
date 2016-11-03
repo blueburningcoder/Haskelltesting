@@ -234,4 +234,7 @@ instance Monoid All' where
 
 
 
-fibs = 1 : 1 : zipWith (+) fibs (tail fibs)
+fibs = 0 : 1 : zipWith (+) fibs (tail fibs)
+
+
+

@@ -119,7 +119,7 @@ instance Monoid a => Monoid (Two Int a) where
 
 
 
-
+{-
 -- import Data.Ratio
 
 
@@ -183,6 +183,7 @@ flipCoins (x:xs) = do
   return a:b
 -}
 
+-- -}
 
 (-:) :: a -> (a -> b) -> b
 x -: f = f x

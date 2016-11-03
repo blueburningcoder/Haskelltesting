@@ -133,10 +133,10 @@ describeList xs = "The list is " ++ what xs
 
 quicksort :: (Ord a) => [a] -> [a]
 quicksort [] = []
-quicksort (x:xs) =
-    let smallerSorted = quicksort [a | a <- xs, a <= x]
+quicksort (x:xs) = smallerSorted ++ [x] ++ biggerSorted
+  where
+        smallerSorted = quicksort [a | a <- xs, a <= x]
         biggerSorted = quicksort [a | a <- xs, a > x]
-    in smallerSorted ++ [x] ++ biggerSorted
 
 
 

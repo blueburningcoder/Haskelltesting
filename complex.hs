@@ -118,18 +118,18 @@ multcomplex (Co a b) r = Co (a * r) (b * r)
 -- rounded because it's end type has to be Num 'a'
 cAbs :: (Num a) => Complex -> a
 cAbs c = fromIntegral . floor . sqrt $ a
-    where (Co a b) = (con c) *: c
+    where (Co a _) = (con c) * c
 
 -- | the unrounded absolute value of a Complex number
 cabs :: Complex -> R
 cabs c = sqrt a
-    where (Co a _) = (con c) *: c
+    where (Co a _) = (con c) * c
 
 -- | returns a simpleComplex number with the result of the signum function
 sigComplex :: Complex -> Complex
 sigComplex (Co 0 0) = simpleComplex 0
 sigComplex a = simpleComplex . signum $ e
-    where (Co e _) = a /: (cAbs a)
+    where (Co e _) = a / (cAbs a)
 
 -- | returns a Complex number in a pair of polar coordinates
 toPolar :: Complex -> Polar
@@ -146,11 +146,11 @@ radToDeg r = r * 360 / (2 * pi)
 -- | returns the argument (phase) of the complex value
 arg :: Complex -> R
 arg (Co r i) 
-    | r == 0 && i > 0  = pi / 2
-    | r == 0 && i < 0  = negate pi / 2
-    | r < 0 && i < 0   = arc - pi
-    | r < 0 && i >= 0  = arc + pi
-    | r > 0            = arc
+    | r == 0 && i >  0 = pi / 2
+    | r == 0 && i <  0 = negate pi / 2
+    | r <  0 && i <  0 = arc - pi
+    | r <  0 && i >= 0 = arc + pi
+    | r >  0           = arc
     | otherwise        = undefined
     where arc = atan (i / r)
 
@@ -221,6 +221,7 @@ esum f = sum f 100
 ex :: R -> R
 ex = (e**)
 
+-- | e ^ (a + bi)
 exi :: Complex -> Complex
 exi (Co 0 i) = Co (cos i) (sin i)
 exi (Co r 0) = Co (ex r) 0
