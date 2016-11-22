@@ -1,8 +1,11 @@
+{-# LANGUAGE ScopedTypeVariables #-}
+
 import Data.Monoid
 import qualified Data.Foldable as F
 import Data.List
 import Debug.Trace
 import Control.Applicative
+import qualified Data.Map.Strict as Map
 -- not needed for most things
 
 
@@ -289,7 +292,8 @@ freqAn (l:li) = (l, first):(freqAn others)
 data SumTree a = Edge Int (SumTree a) (SumTree a) | Leaf Int a
   deriving (Show)
 
-type Code a = [(a, [Bool])]
+type Code a  = [(a, [Bool])]
+type HCode a = Map.Map a [Bool]
 
 instance Eq (SumTree a) where
   Leaf n _   == Leaf m _   = n == m
@@ -344,14 +348,27 @@ treeToCode (Edge _ a b) =
     ((treeToCode b) >>= (\(d, l) -> [(d, False:l)]) )
 treeToCode (Leaf _ a) = [(a, [])]
 
-createHuffmanCode :: Eq a => [a] -> Code a
-createHuffmanCode = treeToCode . buildTree . toSumTree
+
+createHuffmanCode :: Ord a => [a] -> HCode a
+createHuffmanCode = Map.fromList . treeToCode . buildTree . toSumTree
 
 
-encodeHuffman :: Eq a => Code a -> [a] -> [Bool]
-encodeHuffman = undefined
-decodeHuffman :: Eq a => Code a -> [Bool] -> [a]
-decodeHuffman = undefined
+encodeHuffman :: Ord a => HCode a -> [a] -> [Bool]
+encodeHuffman c l = concat $ map (c Map.!) l
+
+decodeHuffman :: Ord a => HCode a -> [Bool] -> [a]
+decodeHuffman _ [] = []
+decodeHuffman c l  = let (erg,[]) = todo ([],l) in reverse erg
+  where
+  todo = (next 0)
+  code = Map.fromList . map (\(x, y) -> (y, x)) . Map.toList $ c
+-- next :: Ord a => Int -> ([a],[Bool]) -> ([a],[Bool])
+  next _ (e,[]) = (e,[])
+  next n (_,l) | n > length l = error "not in huffman representation"
+  next n (e,l) =
+    case Map.lookup (take n l) code of
+      Just a  -> todo (a:e, drop n l)
+      Nothing -> next (n+1) (e,l)
 
 
 toSumTree :: Eq a => [a] -> [SumTree a]
