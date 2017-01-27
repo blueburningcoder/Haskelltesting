@@ -7,9 +7,9 @@ import Data.Maybe
 
 
 p1, p2, p3 :: [Bool] -> Bool
-p1 xs = xs!!3
-p2 xs = xs!!4
-p3 xs = xs!!(2+1) && (xs!!8 || not (xs!!8))
+p1 xs = xs !! 3
+p2 xs = xs !! 4
+p3 xs = xs !! (2+1) && (xs !! 8 || not (xs !! 8))
 
 
 

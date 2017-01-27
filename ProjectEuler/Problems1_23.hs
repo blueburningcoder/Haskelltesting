@@ -8,6 +8,7 @@ import Debug.Trace (trace)
 import Control.Applicative
 
 
+import qualified Data.Map as Map
 import qualified Data.Char as C
 import qualified Data.Text as T
 import qualified Data.Text.IO as T
@@ -85,14 +86,51 @@ solution3 = maximum $ filter isPalindrome' [ m * n | m <- [100..999], n <- [100.
 
 -- Problem 5
 
--- | 0.6614197198105012 percent speedup over the version before (~30sec, 261971 / 157679)
 primes :: [Integer]
-primes = 2:3:5:7:[ p | p <- [11,13..], isPrime p ]
+primes = [ p | p <- [2..], isPrime p]
 
--- | 0.163047890542201 percent faster than 'primes' (~60sec, highest primes: 633197 / 544429)
+-- | ~0.6614197198105012 percent speedup over 'primes':
+-- ( ~30sec, highest: 261'971 / 157'679)
+primes1 :: [Integer]
+primes1 = 2:3:5:7:[ p | p <- [11,13..], isPrime p ]
+
+-- | ~0.163047890542201 percent faster than 'primes1':
+-- ( ~60sec, highest: 633'197 / 544'429)
 -- Is it Possible to make it faster through filter ... changes?
 primes2 :: [Integer]
 primes2 = 2:3:5:7:(filter isPrime $ concat [ [p + 1, p + 3, p + 7, p + 9] | p <- [10,20..]])
+
+
+sieve (p:xs) = p : sieve [ x | x <- xs, x `mod` p > 0 ]
+
+-- | slowdown of ~0.5845692282869863 percent compared to 'primes':
+-- ( ~30sec, highest: 95'267 / 229'321)
+primes3 :: [Integer]
+primes3 = sieve [2..]
+
+-- | ~4.438031266809802 improvement compared to 'primes2':
+-- ( ~60sec, highest: 3'528'211 / 648'803 )
+primes4 :: [Integer]
+primes4 = 2 : [ x | x <- [3..], isprime x]
+
+isprime x = all (\p -> x `mod` p > 0) (factorsToTry x)
+factorsToTry x = takeWhile (\p -> p*p <= x) primes
+
+-- | ~1.3040287951608596 improvement compared to primes4:
+-- ( ~20sec, highest: 2'753'137 / 1'194'923 )
+primes5 :: [Integer]
+primes5 = sieve2 [2..]
+
+sieve2 xs = sieve' xs Map.empty
+  where
+  sieve' [] table = []
+  sieve' (x:xs) table =
+    case Map.lookup x table of
+      Nothing -> x : sieve' xs (Map.insert (x*x) [x] table)
+      Just facts -> sieve' xs (foldl reinsert (Map.delete x table) facts)
+      where
+        reinsert table prime = Map.insertWith (++) (x+prime) [prime] table
+
 
 factors :: Integer -> [Integer]
 factors n | isPrime n = [n]

@@ -1,11 +1,20 @@
-{-# LANGUAGE ScopedTypeVariables #-}
+{-# LANGUAGE ScopedTypeVariables  #-}
+{-# LANGUAGE DeriveGeneric        #-}
+{-# LANGUAGE FlexibleInstances    #-}
+{-# LANGUAGE UndecidableInstances #-}
+-- {-# LANGUAGE DatatypeContexts     #-}
 
 import Data.Monoid
 import qualified Data.Foldable as F
-import Data.List
+import qualified Data.List as L
 import Debug.Trace
 import Control.Applicative
 import qualified Data.Map.Strict as Map
+
+import GHC.Generics
+import Data.Discrimination
+import Data.Functor.Contravariant
+import Data.Bifunctor
 -- not needed for most things
 
 
@@ -139,7 +148,7 @@ data Person = MkPerson
 
 
 sortPersons :: [Person] -> [Person]
-sortPersons = sortBy (comparing' lastName)
+sortPersons = L.sortBy (comparing' lastName)
 
 
 comparing' :: (Ord a) => (b -> a) -> b -> b -> Ordering
@@ -289,60 +298,91 @@ freqAn (l:li) = (l, first):(freqAn others)
           others = filter (\b -> b /= l) li
 
 
-data SumTree a = Edge Int (SumTree a) (SumTree a) | Leaf Int a
-  deriving (Show)
-
 type Code a  = [(a, [Bool])]
 type HCode a = Map.Map a [Bool]
 
-instance Eq (SumTree a) where
+
+data SumTree a e = Edge a (SumTree a e) (SumTree a e) | Leaf a e
+  deriving (Show, Generic)
+
+{-
+instance Grouping (SumTree a e) where
+    grouping = contramap grouping
+--  grouping (Edge n lt rt) = grouping n
+--  grouping (Leaf n a)     = grouping n
+
+instance Sorting (SumTree a e) where
+    sorting = contramap sorting
+--  sorting (Edge n lt rt) = sorting n
+--  sorting (Leaf n a)     = sorting n
+
+-- instance Grouping Char where grouping = contramap (fromIntegral . fromEnum) groupingWord64
+-- instance (Ord a, Generic a) => Grouping a
+-- instance (Grouping a, Generic a) => Sorting a
+-- -}
+
+instance Eq a => Eq (SumTree a e) where
   Leaf n _   == Leaf m _   = n == m
   Leaf n _   == Edge m _ _ = n == m
   Edge n _ _ == Leaf m _   = n == m
   Edge n _ _ == Edge m _ _ = n == m
 
-
-instance Ord (SumTree a) where
+instance Ord a => Ord (SumTree a e) where
   compare (Leaf n _)   (Leaf m _)   = compare n m
   compare (Leaf n _)   (Edge m _ _) = compare n m
   compare (Edge n _ _) (Leaf m _)   = compare n m
   compare (Edge n _ _) (Edge m _ _) = compare n m
 
-instance Functor SumTree where
-  fmap f (Leaf n a) = Leaf n (f a)
+instance Bifunctor SumTree where
+  bimap f g (Leaf a e)     = Leaf (f a) (g e)
+  bimap f g (Edge a lt rt) = Edge (f a) (bimap f g lt) (bimap f g rt)
+
+instance Functor (SumTree a) where
+  fmap f (Leaf n a)   = Leaf n (f a)
   fmap f (Edge n a b) = Edge n (fmap f a) (fmap f b)
 
-instance Applicative SumTree where
+{-
+instance Contravariant (SumTree a) where
+  contramap f (Leaf n a) = Leaf n (f a)
+  contramap f (Edge n a b) = Edge n (contramap f a) (contramap f b)
+--  contramap f (Leaf n e) = Leaf (f n) e
+--  contramap f (Edge n a b) = Edge (f n) (contramap f a) (contramap f b)
+-- -}
+
+{-
+instance Applicative (SumTree a) where
   pure a = Leaf 1 a
   (<*>) = undefined
 --  (Leaf n a) <*> (Leaf m b) = Leaf n (a b)
 --  (Edge n a b) <*> (Edge m c d) =
 
-singleton :: a -> SumTree a
+singleton :: e -> SumTree Int e
 singleton = pure
+-- -}
 
-nsingleton :: a -> Int -> SumTree a
+nsingleton :: e -> a -> SumTree a e
 nsingleton a n = Leaf n a
 
 
-createEdge :: SumTree a -> SumTree a -> SumTree a
+createEdge :: Num a => SumTree a e -> SumTree a e -> SumTree a e
 createEdge a@(Leaf n _)   b@(Leaf m _)   = Edge (n + m) a b
 createEdge a@(Leaf n _)   b@(Edge m _ _) = Edge (n + m) a b
 createEdge a@(Edge n _ _) b@(Leaf m _)   = Edge (n + m) a b
 createEdge a@(Edge n _ _) b@(Edge m _ _) = Edge (n + m) a b
 
 
-buildTree :: [SumTree a] -> SumTree a
+buildTree :: (Ord a, Num a) => [SumTree a e] -> SumTree a e
 buildTree li@(_:_:_) = buildTree $ newPar:other
   where
-  sorted = Data.List.sort li
+  sorted = L.sort li
+--  sorted = Data.List.sort li
   [a, b] = take 2 sorted
   other  = drop 2 sorted
   newPar = createEdge a b
 buildTree [e] = e
 
 
-treeToCode :: Eq a => SumTree a -> Code a
+treeToCode :: Eq e => SumTree a e -> Code e
 treeToCode (Edge _ a b) =
     ((treeToCode a) >>= (\(c, l) -> [(c,  True:l)]) ) ++
     ((treeToCode b) >>= (\(d, l) -> [(d, False:l)]) )
@@ -358,21 +398,21 @@ encodeHuffman c l = concat $ map (c Map.!) l
 
 decodeHuffman :: Ord a => HCode a -> [Bool] -> [a]
 decodeHuffman _ [] = []
-decodeHuffman c l  = let (erg,[]) = todo ([],l) in reverse erg
+decodeHuffman c l  = next' (length l) 0 l
   where
-  todo = (next 0)
   code = Map.fromList . map (\(x, y) -> (y, x)) . Map.toList $ c
--- next :: Ord a => Int -> ([a],[Bool]) -> ([a],[Bool])
-  next _ (e,[]) = (e,[])
-  next n (_,l) | n > length l = error "not in huffman representation"
-  next n (e,l) =
+--  next' :: Ord a => Int -> Int -> [Bool] -> [a]
+  next' _  _ [] = []
+  next' le n l | n > le = error (show l ++ " not in huffman representation")
+  next' le n l =
     case Map.lookup (take n l) code of
-      Just a  -> todo (a:e, drop n l)
-      Nothing -> next (n+1) (e,l)
+      Just a -> a:next' (le - n) 0 (drop n l)
+      Nothing -> next' le (n+1) l
 
 
-toSumTree :: Eq a => [a] -> [SumTree a]
+toSumTree :: Eq e => [e] -> [SumTree Int e]
 toSumTree li = freqAn li >>= (\(a, n) -> return $ nsingleton a n)
+
 
 
 

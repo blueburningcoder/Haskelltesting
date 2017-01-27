@@ -8,7 +8,8 @@ import Control.Arrow
 import Data.Monoid ((<>))
 
 
-import Control.Parallel.Strategies (using, parList, rpar)
+-- import Control.Parallel.Strategies (using, parList, rpar)
+import Control.Parallel.Strategies
 
 
 
@@ -288,7 +289,7 @@ result = [ n | n <- [2000,2002..], isTwoExp n && isTwoExp (n - 2000)]
 
 
 
-main = print (result `using` parList rpar)
+-- main = print (result `using` parList rpar)
 
 
-
+main = undefined
