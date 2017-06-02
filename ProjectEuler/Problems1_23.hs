@@ -54,7 +54,7 @@ number = 600851475143
 max' = ceiling . sqrt . fromIntegral
 
 -- | Returns the prime factors of a Positive (!) Integer.
--- O(sqrt(m)^m) (?)
+-- O(sqrt(m)) (?)
 primeFactors :: Integer -> [Integer]
 primeFactors n = [ m | m <- 2:[3,5..(max' n)], isFactor m n && isPrime m]
 
@@ -64,7 +64,7 @@ isFactor n f = f `mod` n == 0
 
 -- | Returns True if the given number is a Prime, False otherwise.
 -- does this force length to go through more than one element?
--- O(sqrt(m)^2) (?)
+-- O(sqrt(m)) (?)
 isPrime :: Integer -> Bool
 isPrime 2 = True
 isPrime n
@@ -114,9 +114,10 @@ primes4 :: [Integer]
 primes4 = 2 : [ x | x <- [3..], isprime x]
 
 isprime x = all (\p -> x `mod` p > 0) (factorsToTry x)
-factorsToTry x = takeWhile (\p -> p*p <= x) primes
+factorsToTry x = takeWhile (\p -> p*p <= x) primes4
 
 -- | ~1.3040287951608596 improvement compared to primes4:
+-- (new primes4 is about twice as fast though)
 -- ( ~20sec, highest: 2'753'137 / 1'194'923 )
 primes5 :: [Integer]
 primes5 = sieve2 [2..]
@@ -301,7 +302,8 @@ multiplesDividing :: Integer -> Integer -> [Integer]
 multiplesDividing n m = [n * c | c <- [2..maxi], m `mod` (n * c) == 0]
   where maxi = (m `div` n) `div` 2
 
--- | faster than 'factorsFast' by a magnitude of at least 100'000 (likely way more) in finding all factors for bigger numbers
+-- | faster than 'factorsFast' by a magnitude of at least 100'000 (likely way more) in finding all factors
+-- for bigger numbers (possibly it's better in the sense of Landau-Notation even)
 -- likely O(f) is dependent upon the number of prime factors
 factorsFaster :: Integer -> [Integer]
 factorsFaster n = [1] ++ factos ++ [n]
@@ -576,6 +578,7 @@ write n
   | n < 100   = words17 !! (d + 13) ++ words17 !! 14 ++ if m  > 0 then "-" ++ write m else ""
   | n < 1000  = words17 !! h ++ " " ++ words17 !! 23 ++ if mh > 0 then " and " ++ write mh else ""
   | n < 10000 = words17 !! t ++ " " ++ words17 !! 24 ++ if th > 0 then " " ++ write th else ""
+  | otherwise = "number is of no concern for me"
 
   where d = n `div` 10; m = n `mod` 10; h = n `div` 100; mh = n `mod` 100; t = n `div` 1000; th = n `mod` 1000
 

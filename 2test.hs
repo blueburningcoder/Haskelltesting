@@ -7,7 +7,7 @@ import Data.Monoid
 
 data Tree a = EmptyTree | Node a (Tree a) (Tree a) deriving (Show, Read, Eq)
 
-singleton :: a -> Tree a 
+singleton :: a -> Tree a
 singleton x = Node x EmptyTree EmptyTree
 
 
@@ -40,10 +40,10 @@ nums2 = [6,4,5,3,7,8,1]
 
 
 {-
-main = do 
+main = do
     c <- getChar
     if c /= ' ' then
-        do 
+        do
         putChar c
         main
     else return ()
@@ -53,10 +53,10 @@ main = do
 
 -- or, rewritten a bit with the Control.Monad:
 
-main = do                   --     .  .   
+main = do                   --     .  .
     show' $ collTestFor' (maxBound :: Int)
 {-    c <- getChar
-    when (c /= ' ') $ do 
+    when (c /= ' ') $ do
         putChar c
         main
 -}
@@ -72,7 +72,7 @@ show' ((i, b):xs) = do
 -- testing the collatz-assumption
 
 collNext :: Int -> Int
-collNext n 
+collNext n
     | even n = n `div` 2
     | otherwise = 3 * n + 1
 
@@ -104,12 +104,12 @@ filterMap' f = ((.) . (.)) (filter f) map
 {-
 encode :: [a] -> [(Int, a)]
 encode [] = []
-encode (c:xs) = reverse . foldl (\a@((i, m):xic) char -> 
+encode (c:xs) = reverse . foldl (\a@((i, m):xic) char ->
     if m == char then (i + 1, char):xic
     else (1, char):a ) [(1, c)] $ xs
 
 
-decode :: [(Int, a)] -> [a] 
+decode :: [(Int, a)] -> [a]
 decode [] = []
 decode ((i, c):xs) = (take i . repeat $ c) ++ (decode xs)
 -}
@@ -118,17 +118,17 @@ decode ((i, c):xs) = (take i . repeat $ c) ++ (decode xs)
 -- doesn't really make sense ...
 -- encode' :: (a -> Bool) -> [a] -> [[a]]
 -- encode' _ [] = []
--- encode' f l = (takeWhile f l) : encode (dropWhile f l) 
+-- encode' f l = (takeWhile f l) : encode (dropWhile f l)
 
 
 
 -- longestSubsequence :: (a -> Bool) -> [a] -> [a]
--- longestSubsequence f l = foldl 
+-- longestSubsequence f l = foldl
 
 
 
 -- kettenbruch :: Floating -> [Int]
--- kettenbruch fl =  
+-- kettenbruch fl =
 
 
 
@@ -149,6 +149,8 @@ decode ((i, c):xs) = (take i . repeat $ c) ++ (decode xs)
 data Tree2 a = Nil | Fork a (Tree2 a) (Tree2 a)
     deriving(Show)
 
+instance Functor (Tree2 a) where
+  fmap = tmap
 
 numberOfLeaves :: Tree2 a -> Int
 numberOfLeaves Nil = 1
@@ -156,7 +158,7 @@ numberOfLeaves (Fork _ l r) = numberOfLeaves l + numberOfLeaves r + 1
 
 deepNess :: Tree2 a -> Int
 deepNess Nil = 0
-deepNess (Fork _ l r) 
+deepNess (Fork _ l r)
     | deepNess l > deepNess r = 1 + deepNess l
     | otherwise = 1 + deepNess r
 
@@ -205,7 +207,7 @@ helloMe (CoolBool _) = "hello"
 
 
 
- -- might be how Product and Num are implemented :) 
+ -- might be how Product and Num are implemented :)
 newtype Product' a = Product' { getProduct' :: a }
     deriving (Eq, Ord, Read, Show, Bounded)
 
@@ -218,7 +220,7 @@ instance Num a => Monoid (Product' a) where
 newtype Any' = Any' { getAny' :: Bool }
     deriving (Eq, Ord, Read, Show, Bounded)
 
-instance Monoid Any' where 
+instance Monoid Any' where
         mempty = Any' False
         Any' x `mappend` Any' y = Any' (x || y)
 
