@@ -4,6 +4,10 @@
 */.*
 *.config
 */dist
+.cabal-sandbox
+*.html
+target
+out
 
 *.hi
 *.o

@@ -58,7 +58,27 @@ max' = ceiling . sqrt . fromIntegral
 primeFactors :: Integer -> [Integer]
 primeFactors n = [ m | m <- 2:[3,5..(max' n)], isFactor m n && isPrime m]
 
--- | We'll treat it as O(1).
+-- | actually returns all the prime factors
+primeFactors' :: Integer -> [Integer]
+primeFactors' n = if length l == 1 then
+  if isPrime (l !! 0 `div` n) then
+  l ++ [l !! 0 `div` n]
+  else l
+  else l
+  where
+  l = [ m | m <- takeMax (max' n) primes4, isFactor m n]
+
+
+-- | Returns only numbers smaller than this from this
+-- possibly infinite list
+takeMax :: Integer -> [Integer] -> [Integer]
+takeMax n (x:xs)
+  | n > x = x:takeMax n xs
+  | otherwise = []
+takeMax _ [] = []
+
+{-# INLINE isFactor #-}
+-- | if it is a factor of this number, O(1).
 isFactor :: Integer -> Integer -> Bool
 isFactor n f = f `mod` n == 0
 
@@ -68,8 +88,8 @@ isFactor n f = f `mod` n == 0
 isPrime :: Integer -> Bool
 isPrime 2 = True
 isPrime n
-  | n >  0 = length (primeFactors n) == 0
-  | n <= 0 = length (primeFactors (-n)) == 0
+  | n >  0 = length (primeFactors' n) == 0
+  | n <= 0 = length (primeFactors' (-n)) == 0
 
 
 -- Problem 4
@@ -111,7 +131,7 @@ primes3 = sieve [2..]
 -- | ~4.438031266809802 improvement compared to 'primes2':
 -- ( ~60sec, highest: 3'528'211 / 648'803 )
 primes4 :: [Integer]
-primes4 = 2 : [ x | x <- [3..], isprime x]
+primes4 = 2 : [ x | x <- [3,5..], isprime x]
 
 isprime x = all (\p -> x `mod` p > 0) (factorsToTry x)
 factorsToTry x = takeWhile (\p -> p*p <= x) primes4
@@ -307,13 +327,13 @@ multiplesDividing n m = [n * c | c <- [2..maxi], m `mod` (n * c) == 0]
 -- likely O(f) is dependent upon the number of prime factors
 factorsFaster :: Integer -> [Integer]
 factorsFaster n = [1] ++ factos ++ [n]
-  where primes = primeFactors n
+  where primes = primeFactors' n
         factos = if length primes > 1 then foldl1 addNotTwice $ map (\p -> factorsFasterSteps p n 1) primes else if length primes == 1 then factorsFasterSteps (primes !! 0) n 1 else []
 
 -- | possibly slightly faster, but crashes for primes bigger 2 !!!
 factorsFaster' :: Integer -> [Integer]
 factorsFaster' n = [1] ++ factos ++ [n]
-  where primes = primeFactors n
+  where primes = primeFactors' n
         factos = foldr1 addNotTwice $ map (\p -> factorsFasterSteps p n 1) primes
 
 -- | do not use without exactly knowing what it does. Actual speed-improvement in this case.
@@ -342,14 +362,14 @@ factorsFasterSteps n m c
 -- likely O(n^2)
 factorsFast :: Integer -> [Integer]
 factorsFast n = [1] ++ primes ++ multiple ++ {- recips ++ -} [n]
-  where primes      = primeFactors n
+  where primes      = primeFactors' n
         multiple    = nub $ primes >>= (\p -> multiplesDividing p n)
 --      recips      = map (n `div`) $ primes ++ multiple
 
 -- | unknown if this really is an improvement
 factorsFast' :: Integer -> [Integer]
 factorsFast' n = [1] ++ primes ++ (nub $  multiple ++ recips) ++ [n]
-  where primes      = primeFactors n
+  where primes      = primeFactors' n
         multiple    = primes >>= (\p -> multiplesDividing p n)
         recips      = map (n `div`) $ primes ++ multiple
 
@@ -719,6 +739,7 @@ names = V.fromList $ sort [ "MARY","PATRICIA","LINDA","BARBARA","ELIZABETH","JEN
 score :: String -> Int
 score []     = 0
 score (s:tr) = (ord s - ord 'A') + 1 + score tr
+
 
 
 

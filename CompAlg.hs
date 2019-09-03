@@ -51,7 +51,7 @@ powFast m n = acc mempty m n
 -- -}
 
 -- | Algorithm 1.3.6 (Euclid Extended), Page 16
--- iven non-negative integers a and b, this algorithm determines 
+-- iven non-negative integers a and b, this algorithm determines
 -- (u, v, d) such that au + bv = d and d = (a, b). We use
 -- auxiliary variables v1, v3, t1, t3.
 egcd :: Integral a => a -> a -> (a, a, a)
@@ -65,7 +65,7 @@ egcd a b
   actual (u, v, d) v1 v3
     | v3 == 0   = (u, (d - a * u) `div` b, d)
     | otherwise = actual (v1, v, v3) t1 t3
-    where 
+    where
     (q, t3) = d `divMod` v3
     t1      = u - q * v1
 

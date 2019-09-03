@@ -1,0 +1,12 @@
+
+
+[package]
+name = "cards"
+version = "0.1.0"
+authors = ["blueburningcoder <f.karg10@gmail.com>"]
+
+[dependencies]
+rand = "0.3.14"
+permutohedron = "0.2.2"
+
+

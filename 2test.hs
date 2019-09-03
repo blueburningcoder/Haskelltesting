@@ -149,7 +149,7 @@ decode ((i, c):xs) = (take i . repeat $ c) ++ (decode xs)
 data Tree2 a = Nil | Fork a (Tree2 a) (Tree2 a)
     deriving(Show)
 
-instance Functor (Tree2 a) where
+instance Functor Tree2 where
   fmap = tmap
 
 numberOfLeaves :: Tree2 a -> Int
@@ -185,12 +185,12 @@ infiniteTree (x:xs) = Fork x (infiniteTree xs) Nil
 
 -- learnyouahaskell :)
 
-sequenceA :: Applicative f => [f a] -> f [a]
-sequenceA [] = pure []
-sequenceA (x:xs) = (:) <$> x <*> sequenceA xs
-
 sequenceB :: Applicative f => [f a] -> f [a]
-sequenceB = foldr (liftA2 (:)) (pure [])
+sequenceB [] = pure []
+sequenceB (x:xs) = (:) <$> x <*> sequenceB xs
+
+sequenceC :: Applicative f => [f a] -> f [a]
+sequenceC = foldr (liftA2 (:)) (pure [])
 
 
 

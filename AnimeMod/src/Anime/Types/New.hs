@@ -101,7 +101,7 @@ readEpisodes str       = case maybeRead $ "Episodes " ++ str of
 
 
 
--- | The Category of an Anime, being either only beknown, intended to be seen at some point, 
+-- | The Category of an Anime, being either only beknown, intended to be seen at some point,
 --   currently getting viewed or having been watched already
 --
 data Category = All | Other | Next | Current | Watched
@@ -136,7 +136,7 @@ instance Ord Anime where
   compare a b = compare (place a) (place b)
 
 instance Show Anime where
-  show (Anime uid nam rat wa to p) = printf "(%d)| Anime with uid %d is %s with Rating %s and %s/%s seen.\n" 
+  show (Anime uid nam rat wa to p) = printf "(%d)| Anime with uid %d is %s with Rating %s and %s/%s seen.\n"
                                        p uid (show nam) (show rat) (show wa) (show to)
 
 
@@ -271,7 +271,7 @@ createCollection c = Col c 0 V.empty
 
 
 
--- | The Complete Collection of Anime including those watched, those who are going to be watched next and the others, 
+-- | The Complete Collection of Anime including those watched, those who are going to be watched next and the others,
 -- from which only the name might be known. (work in progress)
 --
 data CompleteCollection a = Com

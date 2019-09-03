@@ -28,7 +28,7 @@ idMat a = listArray ((1,1),(a,a)) [1,1..]
 
 
 matrixMult :: Ix i => Matrix i e -> Matrix i e -> Matrix i e
-matrixMult ma mb 
+matrixMult ma mb
   | cols ma == rows mb = listArray (rows ma, cols mb) [undefined]
   | otherwise = undefined
 
@@ -37,7 +37,7 @@ matrixMult ma mb
 -- takes a matrice and an index as to what row should be converted
 rowToVec :: Ix i => Matrix i e -> i -> Array i e
 rowToVec mat i = listArray bnds [mat ! l | l <- rang]
-  where 
+  where
     bnds = (fst . fst . bounds $ mat, fst . snd . bounds $ mat)
     rang = range ((fst bnds, i), (snd bnds, i))
 
@@ -50,7 +50,7 @@ colToVec mat i = listArray bnds [mat ! l | l <- rang]
 
 -- takes two arrays of the same size and returns the resulting scalar
 scalar :: (Ix i, Num e) => Array i e -> Array i e -> e
-scalar ara arb 
+scalar ara arb
   | bounds ara == bounds arb = foldr (\i b -> ara ! i * arb ! i + b) 0 rang
   | otherwise = undefined
   where
